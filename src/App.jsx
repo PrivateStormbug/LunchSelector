@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
-import { categories, getRandomMenuFromCategory, getRandomMenu, getBaseMenu } from './menuData'
+import { menuData as defaultMenuData, getBaseMenu } from './menuData'
+import MenuManager from './MenuManager'
 import './App.css'
+
+const STORAGE_KEY = 'lunchSelector_customMenus'
 
 function App() {
   const [selectedMenu, setSelectedMenu] = useState(null)
@@ -13,10 +16,73 @@ function App() {
   const [searchResults, setSearchResults] = useState([])
   const [kakaoLoaded, setKakaoLoaded] = useState(false)
   const [selectedPlace, setSelectedPlace] = useState(null)
+  const [showMenuManager, setShowMenuManager] = useState(false)
+  const [menuData, setMenuData] = useState({})
+  const [categories, setCategories] = useState([])
   const spinIntervalRef = useRef(null)
   const mapRef = useRef(null)
   const kakaoMapRef = useRef(null)
   const markersRef = useRef([])
+
+  // 로컬 스토리지에서 메뉴 데이터 로드
+  useEffect(() => {
+    const loadMenuData = () => {
+      try {
+        const savedMenus = localStorage.getItem(STORAGE_KEY)
+        if (savedMenus) {
+          const parsedMenus = JSON.parse(savedMenus)
+          setMenuData(parsedMenus)
+          setCategories(Object.keys(parsedMenus))
+        } else {
+          // 저장된 데이터가 없으면 기본 데이터 사용
+          setMenuData(defaultMenuData)
+          setCategories(Object.keys(defaultMenuData))
+        }
+      } catch (error) {
+        console.error('메뉴 데이터 로드 실패:', error)
+        // 에러 발생 시 기본 데이터 사용
+        setMenuData(defaultMenuData)
+        setCategories(Object.keys(defaultMenuData))
+      }
+    }
+    loadMenuData()
+  }, [])
+
+  // 메뉴 데이터 저장
+  const handleSaveMenus = (newMenuData) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newMenuData))
+      setMenuData(newMenuData)
+      setCategories(Object.keys(newMenuData))
+      alert('메뉴가 성공적으로 저장되었습니다! 🎉')
+    } catch (error) {
+      console.error('메뉴 저장 실패:', error)
+      alert('메뉴 저장에 실패했습니다. 다시 시도해주세요.')
+    }
+  }
+
+  // 특정 카테고리에서 랜덤 메뉴 선택
+  const getRandomMenuFromCategory = (category) => {
+    const menus = menuData[category]
+    if (!menus || menus.length === 0) return null
+    const randomIndex = Math.floor(Math.random() * menus.length)
+    return menus[randomIndex]
+  }
+
+  // 랜덤 카테고리 선택
+  const getRandomCategory = () => {
+    if (categories.length === 0) return null
+    const randomIndex = Math.floor(Math.random() * categories.length)
+    return categories[randomIndex]
+  }
+
+  // 완전 랜덤 메뉴 추천
+  const getRandomMenu = () => {
+    const category = getRandomCategory()
+    if (!category) return null
+    const menu = getRandomMenuFromCategory(category)
+    return menu ? { category, menu } : null
+  }
 
   // Kakao SDK 로드 확인
   useEffect(() => {
@@ -307,8 +373,17 @@ function App() {
       <div className="main-panel">
         <div className="container">
           <header className="header">
-            <h1 className="title">🍽️ 점심 메뉴 추천</h1>
-            <p className="subtitle">오늘 뭐 먹을까?</p>
+            <div className="header-content">
+              <h1 className="title">🍽️ 점심 메뉴 추천</h1>
+              <p className="subtitle">오늘 뭐 먹을까?</p>
+            </div>
+            <button
+              className="menu-manage-btn"
+              onClick={() => setShowMenuManager(true)}
+              title="메뉴 관리"
+            >
+              ⚙️ 메뉴 관리
+            </button>
           </header>
 
           <div className="category-section">
@@ -475,6 +550,14 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* 메뉴 관리 모달 */}
+      <MenuManager
+        isOpen={showMenuManager}
+        onClose={() => setShowMenuManager(false)}
+        menuData={menuData}
+        onSaveMenus={handleSaveMenus}
+      />
     </div>
   )
 }

@@ -24,7 +24,7 @@ npm install
 
 **Kakao Maps API 키가 필요합니다:**
 
-1. [Kakao Developers](https://developers.kakao.com/console/app)에서 애플리케이션 등록
+1. [Kakao Developers](https://developers.kakao.com/console/app)에서 애플리케이션 등록, 접근한 URL:port 정보 추가, localhost:8888로 작업함
 2. JavaScript 키 발급
 3. 프로젝트 루트에 `.env` 파일 생성:
 

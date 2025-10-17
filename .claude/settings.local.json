@@ -14,7 +14,10 @@
       "Bash(ssh-add:*)",
       "Read(//c/Users/stormbug/.ssh/**)",
       "Bash(cat:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: LunchSelector 프로젝트 설정\n\nReact + Vite 기반 점심 메뉴 추천 애플리케이션 초기 설정:\n- React 18.2.0 with Vite 5.0.8\n- 5개 카테고리 메뉴 데이터 (한식, 중식, 일식, 양식, 분식)\n- 애니메이션 및 그라디언트 UI 구현\n- 프로젝트 문서 (README, CLAUDE.md, DEPLOYMENT.md)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

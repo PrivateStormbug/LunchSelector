@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea"/>
+      <stop offset="100%" style="stop-color:#764ba2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 둥근 배경 -->
+  <circle cx="50" cy="50" r="50" fill="url(#bg)"/>
+
+  <!-- 포크 (왼쪽 위에서 오른쪽 아래로) -->
+  <g transform="rotate(-45 50 50)">
+    <!-- 포크 손잡이 -->
+    <rect x="44" y="15" width="12" height="55" rx="6" fill="#fff"/>
+
+    <!-- 포크 갈래들 -->
+    <rect x="36" y="15" width="7" height="28" rx="3.5" fill="#fff"/>
+    <rect x="46" y="15" width="7" height="28" rx="3.5" fill="#fff"/>
+    <rect x="57" y="15" width="7" height="28" rx="3.5" fill="#fff"/>
+  </g>
+
+  <!-- 나이프 (오른쪽 위에서 왼쪽 아래로) -->
+  <g transform="rotate(45 50 50)">
+    <!-- 나이프 손잡이 -->
+    <rect x="44" y="15" width="12" height="55" rx="6" fill="#fff"/>
+
+    <!-- 나이프 날 -->
+    <path d="M 44 15 L 56 15 L 56 25 L 60 28 L 56 31 L 56 35 L 44 35 Z" fill="#fff"/>
+  </g>
+
+  <!-- 중앙 장식 원 (랜덤 추천 컨셉) -->
+  <circle cx="50" cy="50" r="10" fill="#f5576c"/>
+  <circle cx="50" cy="50" r="6" fill="#fff" opacity="0.8"/>
+  <text x="50" y="55" text-anchor="middle" font-size="10" font-weight="bold" fill="#f5576c">?</text>
+</svg>

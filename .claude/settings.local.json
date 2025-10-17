@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:apis.map.kakao.com)",
+      "Bash(if not exist public mkdir public)",
+      "mcp__playwright-mcp__browser_navigate",
+      "Bash(del cloudflared.exe)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
+      "Bash(rm:*)",
+      "Bash(git config:*)",
+      "Bash(ssh:*)",
+      "Bash(ssh-add:*)",
+      "Read(//c/Users/stormbug/.ssh/**)",
+      "Bash(cat:*)",
+      "Bash(npm run dev:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

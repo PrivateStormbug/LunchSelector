@@ -4,21 +4,44 @@
 
 ## ✨ 주요 기능
 
-- 5가지 음식 카테고리 (한식, 중식, 일식, 양식, 분식)
-- 카테고리별 메뉴 추천
-- 완전 랜덤 메뉴 추천
+- 6가지 음식 카테고리 (한식, 중식, 일식, 양식, 분식, 기타)
+- 카테고리별 메뉴 추천 & 완전 랜덤 추천
+- **카테고리별 메뉴 추가/수정/삭제 기능**
+- **Kakao Maps API 연동 - 주변 식당 검색**
+- **로컬 스토리지 - 커스텀 메뉴 저장**
 - 부드러운 애니메이션 효과
 - 모바일/데스크톱 반응형 디자인
 
 ## 🚀 시작하기
 
-### 설치
+### 1. 설치
 
 ```bash
 npm install
 ```
 
-### 개발 서버 실행
+### 2. API 키 설정
+
+**Kakao Maps API 키가 필요합니다:**
+
+1. [Kakao Developers](https://developers.kakao.com/console/app)에서 애플리케이션 등록
+2. JavaScript 키 발급
+3. 프로젝트 루트에 `.env` 파일 생성:
+
+```bash
+# .env.example을 복사해서 .env 파일 생성
+cp .env.example .env
+```
+
+4. `.env` 파일에 발급받은 API 키 입력:
+
+```env
+VITE_KAKAO_MAP_API_KEY=your_kakao_map_api_key_here
+```
+
+⚠️ **중요**: `.env` 파일은 Git에 커밋되지 않습니다. API 키를 안전하게 보관하세요.
+
+### 3. 개발 서버 실행
 
 ```bash
 npm run dev

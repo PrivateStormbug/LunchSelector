@@ -3,11 +3,13 @@ import { menuData as defaultMenuData, getBaseMenu } from './menuData'
 import MenuManager from './MenuManager'
 import LoadingSpinner from './LoadingSpinner'
 import MenuDetailModal from './MenuDetailModal'
+import MenuSearch from './MenuSearch'
 import { APP_CONFIG, logger, performance as perfMonitor } from './config.js'
 import { waitForKakaoMapsReady } from './kakaoMapUtils'
 import { validateMenuData, sanitizeMenuData } from './dataValidator'
 import { addToHistory } from './historyManager'
 import { initMarkerPool, getMarkerPool, createMarkersFromPlaces, cleanupMarkers } from './mapMarkerManager'
+import { recordMenuView } from './searchManager'
 import './App.css'
 
 function App() {
@@ -27,6 +29,7 @@ function App() {
   const [menuData, setMenuData] = useState({})
   const [categories, setCategories] = useState([])
   const [isLoadingMap, setIsLoadingMap] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
   const spinIntervalRef = useRef(null)
   const mapRef = useRef(null)
   const kakaoMapRef = useRef(null)
@@ -419,6 +422,23 @@ function App() {
     }
   }
 
+  // MenuSearch에서 메뉴 선택
+  const handleSelectFromSearch = (category, menu) => {
+    setSelectedCategory(category)
+    setSelectedMenu(menu)
+    recordMenuView(category, menu)
+    addToHistory(category, menu)
+    setShowSearch(false)
+    logger.debug(`검색 결과에서 메뉴 선택: ${category} - ${menu}`)
+  }
+
+  // MenuSearch에서 메뉴 상세정보 표시
+  const handleShowDetailFromSearch = (category, menu) => {
+    setMenuDetailInfo({ category, menu })
+    setShowMenuDetail(true)
+    logger.debug(`검색 결과에서 상세정보 표시: ${category} - ${menu}`)
+  }
+
   // 검색 결과 리스트에서 식당 클릭
   const handlePlaceClick = (place) => {
     setSelectedPlace(place)
@@ -441,14 +461,32 @@ function App() {
               <h1 className="title">🍽️ 점심 메뉴 추천</h1>
               <p className="subtitle">오늘 뭐 먹을까?</p>
             </div>
-            <button
-              className="menu-manage-btn"
-              onClick={() => setShowMenuManager(true)}
-              title="메뉴 관리"
-            >
-              ⚙️ 메뉴 관리
-            </button>
+            <div className="header-buttons">
+              <button
+                className="search-toggle-btn"
+                onClick={() => setShowSearch(!showSearch)}
+                title="메뉴 검색"
+              >
+                🔍 검색
+              </button>
+              <button
+                className="menu-manage-btn"
+                onClick={() => setShowMenuManager(true)}
+                title="메뉴 관리"
+              >
+                ⚙️ 메뉴 관리
+              </button>
+            </div>
           </header>
+
+          {showSearch && (
+            <div className="search-section">
+              <MenuSearch
+                onSelectMenu={handleSelectFromSearch}
+                onShowDetail={handleShowDetailFromSearch}
+              />
+            </div>
+          )}
 
           <div className="category-section">
             <h2 className="section-title">카테고리 선택</h2>

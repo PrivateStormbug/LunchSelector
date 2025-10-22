@@ -3,6 +3,10 @@ import { menuData as defaultMenuData, getBaseMenu } from './menuData'
 import MenuManager from './MenuManager'
 import LoadingSpinner from './LoadingSpinner'
 import { APP_CONFIG, logger, performance as perfMonitor } from './config.js'
+import { waitForKakaoMapsReady } from './kakaoMapUtils'
+import { validateMenuData, sanitizeMenuData } from './dataValidator'
+import { addToHistory } from './historyManager'
+import { initMarkerPool, getMarkerPool, createMarkersFromPlaces, cleanupMarkers } from './mapMarkerManager'
 import './App.css'
 
 function App() {
@@ -42,9 +46,19 @@ function App() {
         const savedMenus = localStorage.getItem(APP_CONFIG.storage.menuKey)
         if (savedMenus) {
           const parsedMenus = JSON.parse(savedMenus)
-          menuCacheRef.current = parsedMenus
-          setMenuData(parsedMenus)
-          setCategories(Object.keys(parsedMenus))
+          // 데이터 검증
+          const validationResult = validateMenuData(parsedMenus)
+          if (!validationResult.valid) {
+            logger.warn('메뉴 데이터 검증 실패, 데이터 정제 시도', validationResult.errors)
+            const sanitizedData = sanitizeMenuData(parsedMenus)
+            menuCacheRef.current = sanitizedData
+            setMenuData(sanitizedData)
+            setCategories(Object.keys(sanitizedData))
+          } else {
+            menuCacheRef.current = parsedMenus
+            setMenuData(parsedMenus)
+            setCategories(Object.keys(parsedMenus))
+          }
           logger.debug('localStorage에서 메뉴 데이터 로드 성공')
         } else {
           // 저장된 데이터가 없으면 기본 데이터 사용
@@ -107,30 +121,19 @@ function App() {
     return menu ? { category, menu } : null
   }
 
-  // Kakao SDK 로드 확인
+  // Kakao SDK 로드 확인 (waitForKakaoMapsReady 사용)
   useEffect(() => {
     perfMonitor.start('kakaoLoadCheck')
-    let attempts = 0
-    const maxAttempts = Math.ceil(APP_CONFIG.performance.kakaoLoadTimeout / 100)
-    
-    const checkKakaoLoaded = () => {
-      if (window.kakao && window.kakao.maps) {
-        window.kakao.maps.load(() => {
-          setKakaoLoaded(true)
-          logger.info('Kakao Maps SDK 로드 완료')
-          perfMonitor.end('kakaoLoadCheck')
-        })
-      } else {
-        attempts++
-        if (attempts >= maxAttempts) {
-          logger.warn('Kakao Maps SDK 로드 타임아웃')
-          perfMonitor.end('kakaoLoadCheck')
-          return
-        }
-        setTimeout(checkKakaoLoaded, 100)
-      }
-    }
-    checkKakaoLoaded()
+    waitForKakaoMapsReady()
+      .then(() => {
+        setKakaoLoaded(true)
+        logger.info('Kakao Maps SDK 로드 완료')
+        perfMonitor.end('kakaoLoadCheck')
+      })
+      .catch((error) => {
+        logger.error('Kakao Maps SDK 로드 실패', error)
+        perfMonitor.end('kakaoLoadCheck')
+      })
   }, [])
 
   // 카테고리 선택 (메뉴 추천은 랜덤 버튼 클릭 시)
@@ -186,6 +189,8 @@ function App() {
       setSpinningMenu(null)
       setIsAnimating(false)
       
+      // 히스토리에 추가
+      addToHistory(finalCategory, finalMenu)
       logger.info(`추천 메뉴: ${finalCategory} - ${finalMenu}`)
       perfMonitor.end('randomMenuSelection')
     }, APP_CONFIG.performance.spinDuration)
@@ -265,7 +270,10 @@ function App() {
         // 지도 생성
         const map = new window.kakao.maps.Map(container, options)
         kakaoMapRef.current = map
+        // 마커풀 초기화
+        initMarkerPool(map, APP_CONFIG.performance.markerPoolSize || 20)
         logger.debug('Kakao 지도 생성 완료')
+        logger.debug('마커풀 초기화 완료')
 
         // 현재 위치 마커 표시
         const markerPosition = new window.kakao.maps.LatLng(latitude, longitude)
@@ -294,32 +302,46 @@ function App() {
             logger.info(`검색 결과: ${data.length}개 식당 발견`)
 
             // 기존 마커 제거
-            markersRef.current.forEach(marker => marker.setMap(null))
+            cleanupMarkers(markersRef.current.map((_, idx) => `marker_${idx}`))
             markersRef.current = []
 
             // 검색 결과에 마커 표시
-            const newMarkers = data.map((place, index) => {
-              const placePosition = new window.kakao.maps.LatLng(place.y, place.x)
-
-              const placeMarker = new window.kakao.maps.Marker({
-                position: placePosition,
-                map: map
-              })
-
-              window.kakao.maps.event.addListener(placeMarker, 'click', () => {
+            const markerPool = getMarkerPool()
+            if (markerPool) {
+              const onMarkerClickHandler = (place) => {
                 setSelectedPlace(place)
+                const placePosition = new window.kakao.maps.LatLng(place.y, place.x)
                 map.setCenter(placePosition)
-              })
-
-              if (index === 0) {
-                map.setCenter(placePosition)
-                setSelectedPlace(place)
               }
-
-              return placeMarker
-            })
-
-            markersRef.current = newMarkers
+              const newMarkers = createMarkersFromPlaces(
+                data,
+                map,
+                onMarkerClickHandler,
+                markerPool
+              )
+              markersRef.current = newMarkers
+              // 첫 번째 검색 결과로 중심 이동
+              if (data.length > 0) {
+                map.setCenter(new window.kakao.maps.LatLng(data[0].y, data[0].x))
+                setSelectedPlace(data[0])
+              }
+            } else {
+              logger.warn('마커 풀 초기화 실패, 기본 마커 생성 선택')
+              // Fallback: 기본 마커 생성
+              const newMarkers = data.map((place) => {
+                const placePosition = new window.kakao.maps.LatLng(place.y, place.x)
+                const placeMarker = new window.kakao.maps.Marker({
+                  position: placePosition,
+                  map: map
+                })
+                window.kakao.maps.event.addListener(placeMarker, 'click', () => {
+                  setSelectedPlace(place)
+                  map.setCenter(placePosition)
+                })
+                return placeMarker
+              })
+              markersRef.current = newMarkers
+            }
             perfMonitor.end('mapInitialization')
           } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
             setSearchResults([])

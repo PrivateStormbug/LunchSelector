@@ -1,7 +1,53 @@
+/* CSS 변수 정의 - 라이트 모드 (기본값) */
+:root {
+  --color-background: #ffffff;
+  --color-surface: #f5f5f5;
+  --color-text: #1a1a1a;
+  --color-text-secondary: #666666;
+  --color-primary: #667eea;
+  --color-secondary: #764ba2;
+  --color-border: #e0e0e0;
+  --color-shadow-light: rgba(0, 0, 0, 0.05);
+  --color-shadow-medium: rgba(0, 0, 0, 0.1);
+  --color-shadow-heavy: rgba(0, 0, 0, 0.15);
+  
+  /* 기울기 배경 */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-secondary: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  
+  /* 전환 효과 */
+  --transition-fast: all 0.2s ease-in-out;
+  --transition-normal: all 0.3s ease-in-out;
+  --transition-slow: all 0.5s ease-in-out;
+}
+
+/* 다크 모드 */
+:root.dark-mode {
+  --color-background: #1a1a1a;
+  --color-surface: #2d2d2d;
+  --color-text: #ffffff;
+  --color-text-secondary: #b0b0b0;
+  --color-primary: #7c8ff5;
+  --color-secondary: #9b7dcf;
+  --color-border: #3d3d3d;
+  --color-shadow-light: rgba(0, 0, 0, 0.2);
+  --color-shadow-medium: rgba(0, 0, 0, 0.4);
+  --color-shadow-heavy: rgba(0, 0, 0, 0.6);
+  
+  /* 다크모드 그래디언트 */
+  --gradient-primary: linear-gradient(135deg, #4a5fd8 0%, #6a3fa0 100%);
+  --gradient-secondary: linear-gradient(135deg, #6a3fa0 0%, #4a5fd8 100%);
+}
+
+/* 기본 스타일 */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html {
+  transition: var(--transition-normal);
 }
 
 body {
@@ -10,13 +56,201 @@ body {
     sans-serif, 'Apple Color Emoji', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  background: var(--gradient-primary);
+  color: var(--color-text);
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: var(--transition-normal);
 }
 
 #root {
   width: 100%;
+  transition: var(--transition-normal);
+}
+
+/* 스크롤바 스타일 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
+}
+
+/* 선택 텍스트 색상 */
+::selection {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+::-moz-selection {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* 입력 요소 포커스 */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+:root.dark-mode input:focus,
+:root.dark-mode textarea:focus,
+:root.dark-mode select:focus {
+  box-shadow: 0 0 0 3px rgba(124, 143, 245, 0.2);
+}
+
+/* 버튼 공통 스타일 */
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+  transition: var(--transition-fast);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 링크 스타일 */
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-secondary);
+  text-decoration: underline;
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 포커스 가시성 */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* 리스트 스타일 */
+ul, ol {
+  list-style: none;
+}
+
+/* 테이블 스타일 */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+th {
+  background-color: var(--color-surface);
+  font-weight: 600;
+}
+
+/* 코드 블록 */
+code, pre {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+pre {
+  padding: 12px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 프린트 스타일 */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+  
+  a {
+    color: #0066cc;
+  }
 }

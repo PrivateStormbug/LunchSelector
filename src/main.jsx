@@ -3,7 +3,12 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import ErrorBoundary from './ErrorBoundary.jsx'
 import { logger } from './config.js'
+import { initializeTheme } from './themeManager.js'
 import './index.css'
+
+// 테마 초기화
+initializeTheme()
+logger.debug('테마 초기화 완료')
 
 // Kakao Maps SDK 동적 로드
 const KAKAO_MAP_API_KEY = import.meta.env.VITE_KAKAO_MAP_API_KEY

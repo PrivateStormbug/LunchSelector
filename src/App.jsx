@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { menuData as defaultMenuData, getBaseMenu } from './menuData'
 import MenuManager from './MenuManager'
 import LoadingSpinner from './LoadingSpinner'
+import MenuDetailModal from './MenuDetailModal'
 import { APP_CONFIG, logger, performance as perfMonitor } from './config.js'
 import { waitForKakaoMapsReady } from './kakaoMapUtils'
 import { validateMenuData, sanitizeMenuData } from './dataValidator'
@@ -21,6 +22,8 @@ function App() {
   const [kakaoLoaded, setKakaoLoaded] = useState(false)
   const [selectedPlace, setSelectedPlace] = useState(null)
   const [showMenuManager, setShowMenuManager] = useState(false)
+  const [showMenuDetail, setShowMenuDetail] = useState(false)
+  const [menuDetailInfo, setMenuDetailInfo] = useState({ category: null, menu: null })
   const [menuData, setMenuData] = useState({})
   const [categories, setCategories] = useState([])
   const [isLoadingMap, setIsLoadingMap] = useState(false)
@@ -373,6 +376,49 @@ function App() {
     logger.debug('지도 닫기')
   }
 
+  // 메뉴 상세정보 표시
+  const handleShowMenuDetail = () => {
+    if (selectedMenu && selectedCategory) {
+      setMenuDetailInfo({
+        category: selectedCategory,
+        menu: selectedMenu
+      })
+      setShowMenuDetail(true)
+      logger.debug(`메뉴 상세정보 표시: ${selectedCategory} - ${selectedMenu}`)
+    }
+  }
+
+  // 메뉴 상세정보 닫기
+  const handleCloseMenuDetail = () => {
+    setShowMenuDetail(false)
+    logger.debug('메뉴 상세정보 닫기')
+  }
+
+  // 메뉴 공유
+  const handleShareMenu = (category, menu, detail) => {
+    const shareText = `🍽️ ${menu} (${category})\n\n칼로리: ${detail.calories}kcal\n가격: ${detail.price ? detail.price.toLocaleString() + '원' : '정보없음'}\n\n${detail.description}`
+
+    // Web Share API 지원 여부 확인
+    if (navigator.share) {
+      navigator.share({
+        title: `${menu} 추천`,
+        text: shareText,
+        url: window.location.href
+      }).catch((error) => {
+        logger.debug('공유 취소됨', error)
+      })
+    } else {
+      // Web Share API 미지원 시 텍스트 복사
+      navigator.clipboard.writeText(shareText).then(() => {
+        alert('메뉴 정보가 복사되었습니다!')
+        logger.debug('메뉴 정보 복사 완료')
+      }).catch((error) => {
+        logger.error('복사 실패', error)
+        alert('공유 정보 복사에 실패했습니다.')
+      })
+    }
+  }
+
   // 검색 결과 리스트에서 식당 클릭
   const handlePlaceClick = (place) => {
     setSelectedPlace(place)
@@ -432,13 +478,18 @@ function App() {
 
           {(selectedMenu || isSpinning) && (
             <div className={`result-section ${isAnimating ? 'animating' : ''}`}>
-              <div className={`result-card ${isSpinning ? 'spinning' : ''}`}>
+              <div
+                className={`result-card ${isSpinning ? 'spinning' : ''}`}
+                onClick={() => !isSpinning && handleShowMenuDetail()}
+                style={{ cursor: isSpinning ? 'default' : 'pointer' }}
+                title={isSpinning ? '' : '메뉴 상세정보 보기'}
+              >
                 <div className="result-category">{selectedCategory}</div>
                 <div className={`result-menu ${isSpinning ? 'spinning-text' : ''}`}>
                   {isSpinning ? spinningMenu || '🎰' : selectedMenu}
                 </div>
                 <div className="result-footer">
-                  {isSpinning ? '두근두근... 🎲' : '📍 오른쪽 지도에서 주변 식당을 확인하세요!'}
+                  {isSpinning ? '두근두근... 🎲' : '📍 클릭하여 상세정보 보기 | 오른쪽 지도에서 주변 식당 확인'}
                 </div>
               </div>
             </div>
@@ -576,6 +627,16 @@ function App() {
         menuData={menuData}
         onSaveMenus={handleSaveMenus}
       />
+
+      {/* 메뉴 상세정보 모달 */}
+      {showMenuDetail && (
+        <MenuDetailModal
+          category={menuDetailInfo.category}
+          menu={menuDetailInfo.menu}
+          onClose={handleCloseMenuDetail}
+          onShare={handleShareMenu}
+        />
+      )}
     </div>
   )
 }

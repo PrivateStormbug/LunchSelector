@@ -1,0 +1,482 @@
+/* Menu Detail Modal 스타일 */
+
+.menu-detail-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.menu-detail-modal {
+  background: var(--color-surface);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: slideInUp 0.3s ease-out;
+  color: var(--color-text);
+}
+
+/* 스크롤바 스타일 */
+.menu-detail-modal::-webkit-scrollbar {
+  width: 8px;
+}
+
+.menu-detail-modal::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+.menu-detail-modal::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+.menu-detail-modal::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* 닫기 버튼 */
+.modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--color-background);
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+  color: var(--color-text);
+}
+
+.modal-close-btn:hover {
+  background: var(--color-primary);
+  color: white;
+  transform: scale(1.1);
+}
+
+/* 헤더 섹션 */
+.modal-header {
+  padding: 24px 24px 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal-title-section {
+  flex: 1;
+}
+
+.modal-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+.modal-category {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: white;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 점수 배지 */
+.modal-score-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.score-number {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 11px;
+  margin-top: 4px;
+  opacity: 0.9;
+}
+
+/* 설명 */
+.modal-description {
+  padding: 16px 24px;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* 탭 */
+.modal-tabs {
+  display: flex;
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0;
+  gap: 0;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+  position: relative;
+}
+
+.tab-btn:hover {
+  color: var(--color-text);
+}
+
+.tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* 컨텐츠 */
+.modal-content {
+  padding: 24px;
+  min-height: 300px;
+}
+
+.tab-content {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* 정보 그리드 */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 500px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.info-item {
+  padding: 12px;
+  background: var(--color-background);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.info-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.info-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.spice-level {
+  letter-spacing: 4px;
+  font-size: 16px;
+}
+
+/* 정보 블록 */
+.info-block {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.info-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.info-label-bold {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.info-text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+/* 태그 */
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 6px 12px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+/* 영양정보 차트 */
+.nutrition-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.nutrition-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nutrition-label {
+  width: 60px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.nutrition-bar {
+  flex: 1;
+  height: 24px;
+  background: var(--color-background);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.nutrition-fill {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.4s ease;
+}
+
+.protein-fill {
+  background: linear-gradient(90deg, #ff7675, #d63031);
+}
+
+.carbs-fill {
+  background: linear-gradient(90deg, #fdcb6e, #e17055);
+}
+
+.fat-fill {
+  background: linear-gradient(90deg, #fab1a0, #e84393);
+}
+
+.calorie-fill {
+  background: linear-gradient(90deg, #74b9ff, #0984e3);
+}
+
+.nutrition-value {
+  width: 50px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* 영양 요약 */
+.nutrition-summary {
+  padding: 16px;
+  background: var(--color-background);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.nutrition-summary h4 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.nutrition-summary p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+/* 액션 버튼 */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px 24px 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+.action-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+}
+
+.action-btn.primary:active {
+  transform: translateY(0);
+}
+
+.action-btn.secondary {
+  background: var(--color-background);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.action-btn.secondary:hover {
+  background: var(--color-border);
+  color: var(--color-text);
+}
+
+/* 다크 모드 적응 */
+:root.dark-mode .menu-detail-modal {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 반응형 */
+@media (max-width: 480px) {
+  .menu-detail-modal {
+    width: 95%;
+    border-radius: 12px;
+  }
+
+  .modal-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px 16px 12px 16px;
+  }
+
+  .modal-title {
+    font-size: 24px;
+  }
+
+  .modal-score-badge {
+    width: 70px;
+    height: 70px;
+  }
+
+  .score-number {
+    font-size: 28px;
+  }
+
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-tabs {
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    font-size: 12px;
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
+
+  .modal-content {
+    padding: 16px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    padding: 12px 16px 16px 16px;
+  }
+
+  .action-btn {
+    padding: 10px;
+    font-size: 13px;
+  }
+}

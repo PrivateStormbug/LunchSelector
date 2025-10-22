@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react'
 import { getMenuDetail, calculateNutritionScore } from './menuDetailManager'
+import {
+  isWebShareSupported,
+  shareViaWebShare,
+  copyToClipboard,
+  shareViaFacebook,
+  shareViaTwitter,
+  shareViaLine,
+  shareViaEmail,
+  getQRCodeUrl
+} from './shareManager'
 import './MenuDetailModal.css'
 
 /**
@@ -10,6 +20,8 @@ function MenuDetailModal({ category, menu, onClose, onShare }) {
   const [detail, setDetail] = useState(null)
   const [nutritionScore, setNutritionScore] = useState(0)
   const [activeTab, setActiveTab] = useState('overview')
+  const [showShareMenu, setShowShareMenu] = useState(false)
+  const [showQRCode, setShowQRCode] = useState(false)
 
   useEffect(() => {
     const menuDetail = getMenuDetail(category, menu)
@@ -47,10 +59,54 @@ function MenuDetailModal({ category, menu, onClose, onShare }) {
     return '#ff6b6b'
   }
 
-  const handleShare = () => {
-    if (onShare) {
-      onShare(category, menu, detail)
+  const handleWebShare = async () => {
+    const success = await shareViaWebShare(menu, category, detail)
+    if (success) {
+      setShowShareMenu(false)
+      if (onShare) onShare(category, menu, detail)
+    } else {
+      alert('공유에 실패했습니다.')
     }
+  }
+
+  const handleCopyToClipboard = async () => {
+    const success = await copyToClipboard(menu, category, detail)
+    if (success) {
+      alert('메뉴 정보가 복사되었습니다!')
+      setShowShareMenu(false)
+      if (onShare) onShare(category, menu, detail)
+    } else {
+      alert('복사에 실패했습니다.')
+    }
+  }
+
+  const handleFacebookShare = () => {
+    shareViaFacebook(menu, category)
+    setShowShareMenu(false)
+    if (onShare) onShare(category, menu, detail)
+  }
+
+  const handleTwitterShare = () => {
+    shareViaTwitter(menu, category)
+    setShowShareMenu(false)
+    if (onShare) onShare(category, menu, detail)
+  }
+
+  const handleLineShare = () => {
+    shareViaLine(menu, category)
+    setShowShareMenu(false)
+    if (onShare) onShare(category, menu, detail)
+  }
+
+  const handleEmailShare = () => {
+    shareViaEmail(menu, category, detail)
+    setShowShareMenu(false)
+    if (onShare) onShare(category, menu, detail)
+  }
+
+  const handleShowQRCode = () => {
+    setShowQRCode(!showQRCode)
+    setShowShareMenu(false)
   }
 
   return (
@@ -141,6 +197,18 @@ function MenuDetailModal({ category, menu, onClose, onShare }) {
                       </span>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {showQRCode && (
+                <div className="qr-code-block">
+                  <div className="info-label-bold">QR 코드</div>
+                  <img
+                    src={getQRCodeUrl(menu)}
+                    alt="QR Code"
+                    className="qr-code-image"
+                  />
+                  <p className="qr-code-hint">이미지를 저장하여 공유할 수 있습니다</p>
                 </div>
               )}
             </div>
@@ -239,12 +307,47 @@ function MenuDetailModal({ category, menu, onClose, onShare }) {
           )}
         </div>
 
+        {/* 공유 메뉴 */}
+        {showShareMenu && (
+          <div className="share-menu">
+            <div className="share-menu-title">공유하기</div>
+            <div className="share-options">
+              {isWebShareSupported() && (
+                <button className="share-option" onClick={handleWebShare}>
+                  📤 기본 공유
+                </button>
+              )}
+              <button className="share-option" onClick={handleCopyToClipboard}>
+                📋 복사
+              </button>
+              <button className="share-option" onClick={handleFacebookShare}>
+                👍 페이스북
+              </button>
+              <button className="share-option" onClick={handleTwitterShare}>
+                🐦 트위터
+              </button>
+              <button className="share-option" onClick={handleLineShare}>
+                💬 라인
+              </button>
+              <button className="share-option" onClick={handleEmailShare}>
+                ✉️ 이메일
+              </button>
+              <button className="share-option" onClick={handleShowQRCode}>
+                📱 QR 코드
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="modal-actions">
           <button className="action-btn secondary" onClick={onClose}>
             닫기
           </button>
-          <button className="action-btn primary" onClick={handleShare}>
-            공유하기
+          <button
+            className="action-btn primary"
+            onClick={() => setShowShareMenu(!showShareMenu)}
+          >
+            {showShareMenu ? '⬆️ 닫기' : '🔗 공유하기'}
           </button>
         </div>
       </div>

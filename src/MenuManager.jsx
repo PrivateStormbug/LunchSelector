@@ -5,7 +5,9 @@ function MenuManager({ isOpen, onClose, menuData, onSaveMenus }) {
   const [selectedCategory, setSelectedCategory] = useState('한식')
   const [editingMenus, setEditingMenus] = useState({})
   const [newMenuInput, setNewMenuInput] = useState('')
+  const [newMenuCategory, setNewMenuCategory] = useState('한식')
   const [searchTerm, setSearchTerm] = useState('')
+  const [isSearchAll, setIsSearchAll] = useState(false)
 
   // menuData가 변경될 때마다 editingMenus 업데이트
   useEffect(() => {
@@ -29,14 +31,25 @@ function MenuManager({ isOpen, onClose, menuData, onSaveMenus }) {
   if (!isOpen) return null
 
   const categories = Object.keys(editingMenus)
-  const currentMenus = editingMenus[selectedCategory] || []
+
+  // 전체 메뉴 검색 모드
+  let currentMenus = []
+  if (isSearchAll) {
+    // 모든 카테고리의 메뉴를 함께 표시
+    currentMenus = categories.flatMap(cat =>
+      editingMenus[cat].map(menu => ({ menu, category: cat }))
+    )
+  } else {
+    // 선택된 카테고리의 메뉴만
+    currentMenus = (editingMenus[selectedCategory] || []).map(menu => ({ menu, category: selectedCategory }))
+  }
 
   // 메뉴를 가나다순으로 정렬
-  const sortedMenus = [...currentMenus].sort((a, b) => a.localeCompare(b, 'ko-KR'))
+  const sortedMenus = [...currentMenus].sort((a, b) => a.menu.localeCompare(b.menu, 'ko-KR'))
 
   // 검색 필터링
   const filteredMenus = searchTerm
-    ? sortedMenus.filter(menu => menu.includes(searchTerm))
+    ? sortedMenus.filter(item => item.menu.includes(searchTerm))
     : sortedMenus
 
   // 메뉴 추가
@@ -47,30 +60,36 @@ function MenuManager({ isOpen, onClose, menuData, onSaveMenus }) {
       return
     }
 
-    if (currentMenus.includes(trimmedMenu)) {
+    // 전체 검색 모드에서는 메뉴 추가 불가
+    if (isSearchAll) {
+      alert('카테고리를 선택한 후 메뉴를 추가해주세요!')
+      return
+    }
+
+    if (currentMenus.some(item => item.menu === trimmedMenu)) {
       alert('이미 존재하는 메뉴입니다!')
       return
     }
 
     setEditingMenus(prev => ({
       ...prev,
-      [selectedCategory]: [...prev[selectedCategory], trimmedMenu]
+      [newMenuCategory]: [...(prev[newMenuCategory] || []), trimmedMenu]
     }))
     setNewMenuInput('')
   }
 
   // 메뉴 삭제
-  const handleDeleteMenu = (menuToDelete) => {
+  const handleDeleteMenu = (menuToDelete, category) => {
     if (confirm(`'${menuToDelete}'를 삭제하시겠습니까?`)) {
       setEditingMenus(prev => ({
         ...prev,
-        [selectedCategory]: prev[selectedCategory].filter(menu => menu !== menuToDelete)
+        [category]: prev[category].filter(menu => menu !== menuToDelete)
       }))
     }
   }
 
   // 메뉴 수정 (인라인 편집)
-  const handleEditMenu = (oldMenu, newMenu) => {
+  const handleEditMenu = (oldMenu, newMenu, category) => {
     const trimmedMenu = newMenu.trim()
     if (!trimmedMenu) {
       alert('메뉴 이름은 비어있을 수 없습니다!')
@@ -79,14 +98,14 @@ function MenuManager({ isOpen, onClose, menuData, onSaveMenus }) {
 
     if (trimmedMenu === oldMenu) return
 
-    if (currentMenus.includes(trimmedMenu)) {
+    if (currentMenus.some(item => item.menu === trimmedMenu)) {
       alert('이미 존재하는 메뉴입니다!')
       return
     }
 
     setEditingMenus(prev => ({
       ...prev,
-      [selectedCategory]: prev[selectedCategory].map(menu =>
+      [category]: prev[category].map(menu =>
         menu === oldMenu ? trimmedMenu : menu
       )
     }))
@@ -124,19 +143,32 @@ function MenuManager({ isOpen, onClose, menuData, onSaveMenus }) {
     <div className="menu-manager-overlay" onClick={onClose}>
       <div className="menu-manager-modal" onClick={e => e.stopPropagation()}>
         <div className="menu-manager-header">
-          <h2>🔧 메뉴 관리</h2>
+          <h2>🔧 메뉴관리</h2>
           <button className="close-btn" onClick={onClose}>✕</button>
         </div>
 
         <div className="menu-manager-body">
           {/* 카테고리 탭 */}
           <div className="category-tabs">
+            <button
+              className={`category-tab all-search-tab ${isSearchAll ? 'active' : ''}`}
+              onClick={() => {
+                setIsSearchAll(true)
+                setSearchTerm('')
+              }}
+            >
+              🔍 전체검색
+              <span className="menu-count">
+                ({Object.values(editingMenus).reduce((sum, menus) => sum + menus.length, 0)})
+              </span>
+            </button>
             {categories.map(category => (
               <button
                 key={category}
-                className={`category-tab ${selectedCategory === category ? 'active' : ''}`}
+                className={`category-tab ${selectedCategory === category && !isSearchAll ? 'active' : ''}`}
                 onClick={() => {
                   setSelectedCategory(category)
+                  setIsSearchAll(false)
                   setSearchTerm('')
                 }}
               >
@@ -148,15 +180,28 @@ function MenuManager({ isOpen, onClose, menuData, onSaveMenus }) {
 
           {/* 메뉴 추가 영역 */}
           <div className="add-menu-section">
+            <select
+              className="category-select"
+              value={newMenuCategory}
+              onChange={e => setNewMenuCategory(e.target.value)}
+              disabled={isSearchAll}
+            >
+              {categories.map(category => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
             <input
               type="text"
               className="menu-input"
-              placeholder={`${selectedCategory} 메뉴 추가...`}
+              placeholder={isSearchAll ? '카테고리를 선택한 후 추가해주세요' : `${newMenuCategory} 메뉴 추가...`}
               value={newMenuInput}
               onChange={e => setNewMenuInput(e.target.value)}
               onKeyPress={handleKeyPress}
+              disabled={isSearchAll}
             />
-            <button className="add-btn" onClick={handleAddMenu}>
+            <button className="add-btn" onClick={handleAddMenu} disabled={isSearchAll}>
               ➕ 추가
             </button>
           </div>
@@ -180,10 +225,12 @@ function MenuManager({ isOpen, onClose, menuData, onSaveMenus }) {
           {/* 메뉴 리스트 */}
           <div className="menu-list">
             {filteredMenus.length > 0 ? (
-              filteredMenus.map((menu, index) => (
+              filteredMenus.map((item, index) => (
                 <MenuItem
-                  key={`${menu}-${index}`}
-                  menu={menu}
+                  key={`${item.menu}-${item.category}-${index}`}
+                  menu={item.menu}
+                  category={item.category}
+                  isSearchAll={isSearchAll}
                   onDelete={handleDeleteMenu}
                   onEdit={handleEditMenu}
                 />
@@ -198,8 +245,8 @@ function MenuManager({ isOpen, onClose, menuData, onSaveMenus }) {
           {/* 통계 정보 */}
           <div className="stats-section">
             <div className="stat-item">
-              <span className="stat-label">현재 카테고리:</span>
-              <span className="stat-value">{currentMenus.length}개</span>
+              <span className="stat-label">{isSearchAll ? '전체 메뉴:' : '현재 카테고리:'}</span>
+              <span className="stat-value">{filteredMenus.length}개</span>
             </div>
             <div className="stat-item">
               <span className="stat-label">전체 메뉴:</span>
@@ -229,12 +276,12 @@ function MenuManager({ isOpen, onClose, menuData, onSaveMenus }) {
 }
 
 // 개별 메뉴 아이템 컴포넌트
-function MenuItem({ menu, onDelete, onEdit }) {
+function MenuItem({ menu, category, isSearchAll, onDelete, onEdit }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(menu)
 
   const handleSaveEdit = () => {
-    onEdit(menu, editValue)
+    onEdit(menu, editValue, category)
     setIsEditing(false)
   }
 
@@ -274,12 +321,15 @@ function MenuItem({ menu, onDelete, onEdit }) {
         </>
       ) : (
         <>
-          <span className="menu-name">{menu}</span>
+          <div className="menu-name-wrapper">
+            <span className="menu-name">{menu}</span>
+            {isSearchAll && <span className="menu-category-tag">{category}</span>}
+          </div>
           <div className="menu-item-actions">
             <button className="edit-btn" onClick={() => setIsEditing(true)} title="수정">
               ✏️
             </button>
-            <button className="delete-btn" onClick={() => onDelete(menu)} title="삭제">
+            <button className="delete-btn" onClick={() => onDelete(menu, category)} title="삭제">
               🗑️
             </button>
           </div>

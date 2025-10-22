@@ -1,25 +1,44 @@
 {
   "permissions": {
     "allow": [
+      "mcp__filesystem-mcp__list_directory",
+      "Bash(powershell -Command \"if (Test-Path ''C:\\Users\\Stormbug\\.cloudflared\\'') { Get-ChildItem ''C:\\Users\\Stormbug\\.cloudflared\\'' } else { Write-Host ''Credentials directory not found'' }\")",
+      "Bash(powershell -Command \"Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 2\")",
+      "Bash(powershell -Command \"cd ''E:\\LunchSelector''; & ''.\\Start-Tunnel.ps1''\" -run_in_background)",
+      "Bash(git -C \"E:\\LunchSelector\" config --file .gitmodules --get-regexp .)",
+      "Bash(powershell -Command \"ls -la ''E:\\LunchSelector\\LunchSelector\\.git'' -ErrorAction SilentlyContinue | Select-Object -First 5\")",
+      "Bash(powershell -Command \"Remove-Item -Path ''E:\\LunchSelector\\LunchSelector\\.git'' -Recurse -Force; Write-Host ''Nested .git directory removed successfully'' -ForegroundColor Green\")",
+      "Bash(git add src/App.css)",
+      "Bash(git commit -m \"Fix: 헤더 타이틀 위치 정렬 수정\n\n- position: static → position: relative로 변경\n- 타이틀 텍스트가 헤더 영역 내 정확한 중앙에 배치됨\n- 버튼 위치 유지\")",
+      "Bash(powershell -Command \"Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 2; Write-Host ''Cloudflared 프로세스 종료 완료'' -ForegroundColor Green\")",
+      "mcp__filesystem-mcp__read_text_file",
+      "mcp__filesystem-mcp__directory_tree",
       "WebFetch(domain:apis.map.kakao.com)",
-      "Bash(if not exist public mkdir public)",
-      "mcp__playwright-mcp__browser_navigate",
-      "Bash(del cloudflared.exe)",
+      "mcp__filesystem-mcp__edit_file",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
-      "Bash(dir:*)",
-      "Bash(rm:*)",
-      "Bash(git config:*)",
-      "Bash(ssh:*)",
-      "Bash(ssh-add:*)",
-      "Read(//c/Users/stormbug/.ssh/**)",
-      "Bash(cat:*)",
+      "mcp__playwright-mcp__browser_navigate",
+      "Bash(tasklist:*)",
       "Bash(npm run dev:*)",
-      "Bash(git add:*)",
-      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: LunchSelector 프로젝트 설정\n\nReact + Vite 기반 점심 메뉴 추천 애플리케이션 초기 설정:\n- React 18.2.0 with Vite 5.0.8\n- 5개 카테고리 메뉴 데이터 (한식, 중식, 일식, 양식, 분식)\n- 애니메이션 및 그라디언트 UI 구현\n- 프로젝트 문서 (README, CLAUDE.md, DEPLOYMENT.md)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
-      "Bash(git push:*)"
+      "Bash(powershell:*)",
+      "Bash(grep:*)",
+      "Bash(git checkout:*)",
+      "Bash(Start-Sleep -Seconds 3)",
+      "Bash(taskkill:*)",
+      "Bash(timeout 5 powershell:*)",
+      "Bash(Write-Host \"No node processes found\")",
+      "mcp__playwright-mcp__browser_take_screenshot",
+      "mcp__playwright-mcp__browser_press_key",
+      "mcp__playwright-mcp__browser_console_messages",
+      "mcp__playwright-mcp__browser_wait_for",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []
+  },
+  "mcpServers": {
+    "magic": {
+      "command": "magic-mcp"
+    }
   }
 }

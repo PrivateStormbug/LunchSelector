@@ -20,9 +20,11 @@
 
 .app.show-map .main-panel {
   justify-content: flex-start;
-  padding-left: 5%;
-  width: 95%;
-  margin: 0 auto;
+  align-items: stretch;
+  padding: 0;
+  width: 30%;
+  margin: 0;
+  overflow-y: auto;
 }
 
 .map-panel {
@@ -40,6 +42,8 @@
 
 .app.show-map .map-panel {
   transform: translateX(0);
+  width: 70%;
+  left: 30%;
 }
 
 .container {
@@ -59,8 +63,15 @@
 
 /* 지도 표시 시 컨테이너 세로 모드 */
 .app.show-map .container {
-  max-width: 22rem;
-  padding: 3% 2%;
+  max-width: 100%;
+  width: 100%;
+  padding: 3% 3%;
+  margin: 0;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.95);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes fadeInUp {
@@ -740,6 +751,10 @@
     margin-top: 4rem;
   }
 
+  .app.show-map .container {
+    padding: 2% 3%;
+  }
+
   .header {
     flex-direction: column;
     justify-content: center;
@@ -747,6 +762,12 @@
     gap: 0.5rem;
     padding-top: 4.5rem;
     position: relative;
+    margin-bottom: 3%;
+  }
+
+  .app.show-map .header {
+    margin-bottom: 2%;
+    padding-top: 2rem;
   }
 
   .header-content {
@@ -767,6 +788,10 @@
     margin-top: 0;
   }
 
+  .app.show-map .title {
+    font-size: 1.2rem;
+  }
+
   .subtitle {
     font-size: 0.8rem;
   }
@@ -780,6 +805,10 @@
     top: 0.5rem !important;
     right: 0.5rem !important;
     z-index: 9999 !important;
+  }
+
+  .app.show-map .header-buttons {
+    display: none;
   }
 
   .history-btn,
@@ -796,13 +825,26 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .app.show-map .category-grid {
+    grid-template-columns: 1fr;
+  }
+
   .category-btn {
     padding: 5% 3%;
     font-size: 0.85rem;
   }
 
+  .app.show-map .category-btn {
+    padding: 3% 2%;
+    font-size: 0.8rem;
+  }
+
   .result-menu {
     font-size: 2rem;
+  }
+
+  .app.show-map .result-menu {
+    font-size: 1.6rem;
   }
 }
 
@@ -812,9 +854,13 @@
     width: 75%;
   }
 
+  .app.show-map .map-panel {
+    width: 75%;
+    left: 25%;
+  }
+
   .app.show-map .main-panel {
-    padding-left: 5%;
-    transform: translateX(-5%) scale(0.9);
+    width: 25%;
   }
 
   .divider-close-btn {
@@ -833,9 +879,15 @@
     width: 100%;
   }
 
+  .app.show-map .map-panel {
+    width: 100%;
+    left: 0;
+  }
+
   .app.show-map .main-panel {
-    padding-left: 5%;
-    transform: translateX(-20%) scale(0.8);
+    width: 0;
+    padding: 0;
+    display: none;
   }
 
   .map-header {
@@ -991,10 +1043,98 @@ button, .category-btn, .random-btn {
   border-right: 1px solid #e2e8f0;
   overflow-y: auto;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Rating Filter Section */
+.rating-filter-section {
+  padding: 3% 5%;
+  background: linear-gradient(135deg, rgba(255, 155, 123, 0.08) 0%, rgba(255, 140, 105, 0.08) 100%);
+  border-bottom: 2px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.filter-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #a89968;
+  margin-bottom: 2%;
+  text-align: center;
+}
+
+.filter-controls {
+  margin-bottom: 2%;
+}
+
+.rating-slider {
+  width: 100%;
+  height: 0.5rem;
+  border-radius: 0.25rem;
+  background: #e2e8f0;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.rating-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff9b7b 0%, #ff8c69 100%);
+  cursor: pointer;
+  box-shadow: 0 0.25rem 0.75rem rgba(255, 155, 123, 0.3);
+  transition: all 0.3s ease;
+}
+
+.rating-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0.5rem 1rem rgba(255, 155, 123, 0.4);
+}
+
+.rating-slider::-moz-range-thumb {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff9b7b 0%, #ff8c69 100%);
+  cursor: pointer;
+  box-shadow: 0 0.25rem 0.75rem rgba(255, 155, 123, 0.3);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.rating-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0.5rem 1rem rgba(255, 155, 123, 0.4);
+}
+
+.rating-slider::-moz-range-track {
+  background: transparent;
+  border: none;
+}
+
+.filter-info {
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.filter-count {
+  color: #a89968;
+}
+
+.filter-warning {
+  color: #e53e3e;
 }
 
 .results-list {
   padding: 0;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .no-results {
@@ -1065,6 +1205,17 @@ button, .category-btn, .random-btn {
   color: #a89968;
   font-weight: 600;
   margin: 1% 0;
+}
+
+.result-rating {
+  font-size: 0.9rem;
+  color: #ed8936;
+  font-weight: 700;
+  margin: 1% 0;
+  background: rgba(237, 137, 54, 0.1);
+  padding: 1.5% 3%;
+  border-radius: 0.375rem;
+  text-align: center;
 }
 
 .result-phone {
@@ -1221,25 +1372,94 @@ button, .category-btn, .random-btn {
 
   .search-results-panel {
     width: 100%;
-    height: 15.625rem;
+    height: 20rem;
+    max-height: 35vh;
     border-right: none;
     border-bottom: 1px solid #e2e8f0;
   }
 
-  .place-detail-panel {
-    right: 2%;
-    bottom: 2%;
-    width: 85%;
-    max-width: none;
+  .rating-filter-section {
+    padding: 4% 5%;
   }
 
-  .place-detail-header h3 {
+  .filter-label {
+    font-size: 0.9rem;
+  }
+
+  .result-item {
+    padding: 3% 4%;
+  }
+
+  .result-name {
     font-size: 0.95rem;
   }
 
-  .detail-button {
-    padding: 3% 5%;
+  .result-address,
+  .result-distance,
+  .result-rating,
+  .result-phone {
     font-size: 0.8rem;
+  }
+
+  .place-detail-panel {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    border-radius: 1.25rem 1.25rem 0 0;
+    max-height: 50%;
+    box-shadow: 0 -0.5rem 1.5rem rgba(0, 0, 0, 0.2);
+  }
+
+  .place-detail-header {
+    padding: 4% 5%;
+  }
+
+  .place-detail-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .detail-close-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.3rem;
+  }
+
+  .place-detail-body {
+    padding: 4% 5%;
+    max-height: calc(50vh - 5rem);
+    overflow-y: auto;
+  }
+
+  .detail-item {
+    margin-bottom: 3%;
+  }
+
+  .detail-label {
+    font-size: 0.85rem;
+  }
+
+  .detail-value {
+    font-size: 1rem;
+  }
+
+  .detail-actions {
+    margin-top: 4%;
+    padding-top: 4%;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .detail-button {
+    padding: 4% 5%;
+    font-size: 0.95rem;
+    min-height: 2.75rem;
+    margin-bottom: 2%;
+  }
+
+  .detail-button:last-child {
+    margin-bottom: 0;
   }
 }
 
@@ -1839,5 +2059,225 @@ button, .category-btn, .random-btn {
   .kakao-link-btn {
     padding: 3% 4%;
     font-size: 1rem;
+  }
+}
+
+/* 평점 필터 스타일 */
+.rating-filter-section {
+  padding: 3% 5%;
+  background: linear-gradient(135deg, rgba(255, 155, 123, 0.08) 0%, rgba(255, 140, 105, 0.08) 100%);
+  border-bottom: 2px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.filter-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 3%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-controls {
+  margin-bottom: 3%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.rating-slider {
+  width: 100%;
+  height: 0.5rem;
+  border-radius: 0.25rem;
+  background: #e2e8f0;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.rating-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff9b7b 0%, #ff8c69 100%);
+  cursor: pointer;
+  box-shadow: 0 0.25rem 0.75rem rgba(255, 155, 123, 0.3);
+  transition: all 0.3s ease;
+}
+
+.rating-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0.5rem 1.25rem rgba(255, 155, 123, 0.5);
+}
+
+.rating-slider::-moz-range-thumb {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff9b7b 0%, #ff8c69 100%);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0.25rem 0.75rem rgba(255, 155, 123, 0.3);
+  transition: all 0.3s ease;
+}
+
+.rating-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0.5rem 1.25rem rgba(255, 155, 123, 0.5);
+}
+
+.filter-info {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.filter-count {
+  color: #ff8c69;
+  background: rgba(255, 155, 123, 0.1);
+  padding: 1% 2%;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
+.filter-warning {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
+  padding: 1% 2%;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
+.result-rating {
+  font-size: 0.9rem;
+  color: #ed8936;
+  font-weight: 700;
+  margin: 1% 0;
+  background: rgba(237, 137, 54, 0.1);
+  padding: 1.5% 3%;
+  border-radius: 0.375rem;
+  text-align: center;
+}
+
+/* 지도 패널에서 검색 결과 패널 스타일 */
+.app.show-map .search-results-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  border-right: 1px solid #e2e8f0;
+}
+
+/* 모바일 화면 최적화 */
+@media (max-width: 48em) {
+  .app.show-map .main-panel {
+    width: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 999;
+    max-height: 30vh;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .app.show-map .map-panel {
+    width: 100%;
+    left: 0;
+    height: 70vh;
+    top: 30vh;
+    box-shadow: none;
+  }
+
+  .search-results-panel {
+    width: 100%;
+    height: 20rem;
+    max-height: 25vh;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .place-detail-panel {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    border-radius: 1.25rem 1.25rem 0 0;
+    max-height: 50%;
+    box-shadow: 0 -0.5rem 1.5rem rgba(0, 0, 0, 0.2);
+  }
+
+  .app.show-map .container {
+    min-height: auto;
+    max-height: 30vh;
+    overflow-y: auto;
+  }
+
+  .rating-filter-section {
+    padding: 2% 3%;
+  }
+
+  .result-item {
+    padding: 2% 3%;
+  }
+
+  .header {
+    height: auto;
+    margin-bottom: 2%;
+  }
+
+  .header-content {
+    position: static;
+    transform: none;
+  }
+
+  .menu-manage-btn {
+    display: none;
+  }
+}
+
+/* 매우 작은 화면 (480px 이하) */
+@media (max-width: 30em) {
+  .app.show-map .main-panel {
+    max-height: 25vh;
+  }
+
+  .app.show-map .map-panel {
+    height: 75vh;
+    top: 25vh;
+  }
+
+  .search-results-panel {
+    max-height: 20vh;
+  }
+
+  .place-detail-panel {
+    max-height: 55%;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .subtitle {
+    font-size: 0.8rem;
+  }
+
+  .result-item-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .result-number {
+    font-size: 0.75rem;
+  }
+
+  .result-name {
+    font-size: 0.9rem;
   }
 }

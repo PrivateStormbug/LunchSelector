@@ -1,6 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
+import ErrorBoundary from './ErrorBoundary.jsx'
+import { logger } from './config.js'
 import './index.css'
 
 // Kakao Maps SDK 동적 로드
@@ -11,13 +13,19 @@ if (KAKAO_MAP_API_KEY) {
   script.type = 'text/javascript'
   script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`
   script.async = true
+  script.onerror = () => {
+    logger.error('Kakao Maps SDK 로드 실패')
+  }
   document.head.appendChild(script)
+  logger.debug('Kakao Maps SDK 로드 시작')
 } else {
-  console.warn('⚠️ Kakao Map API Key가 설정되지 않았습니다. .env 파일을 확인해주세요.')
+  logger.warn('Kakao Map API Key가 설정되지 않았습니다. .env 파일을 확인해주세요.')
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </React.StrictMode>,
 )

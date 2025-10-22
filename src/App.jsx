@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { menuData as defaultMenuData, getBaseMenu } from './menuData'
 import MenuManager from './MenuManager'
+import LoadingSpinner from './LoadingSpinner'
+import { APP_CONFIG, logger, performance as perfMonitor } from './config.js'
 import './App.css'
-
-const STORAGE_KEY = 'lunchSelector_customMenus'
 
 function App() {
   const [selectedMenu, setSelectedMenu] = useState(null)
@@ -19,30 +19,48 @@ function App() {
   const [showMenuManager, setShowMenuManager] = useState(false)
   const [menuData, setMenuData] = useState({})
   const [categories, setCategories] = useState([])
+  const [isLoadingMap, setIsLoadingMap] = useState(false)
   const spinIntervalRef = useRef(null)
   const mapRef = useRef(null)
   const kakaoMapRef = useRef(null)
   const markersRef = useRef([])
+  const menuCacheRef = useRef(null)
 
   // 로컬 스토리지에서 메뉴 데이터 로드
   useEffect(() => {
     const loadMenuData = () => {
+      perfMonitor.start('loadMenuData')
       try {
-        const savedMenus = localStorage.getItem(STORAGE_KEY)
+        // 캐시 확인
+        if (menuCacheRef.current) {
+          logger.debug('메뉴 데이터 캐시에서 로드')
+          setMenuData(menuCacheRef.current)
+          setCategories(Object.keys(menuCacheRef.current))
+          return
+        }
+
+        const savedMenus = localStorage.getItem(APP_CONFIG.storage.menuKey)
         if (savedMenus) {
           const parsedMenus = JSON.parse(savedMenus)
+          menuCacheRef.current = parsedMenus
           setMenuData(parsedMenus)
           setCategories(Object.keys(parsedMenus))
+          logger.debug('localStorage에서 메뉴 데이터 로드 성공')
         } else {
           // 저장된 데이터가 없으면 기본 데이터 사용
+          menuCacheRef.current = defaultMenuData
           setMenuData(defaultMenuData)
           setCategories(Object.keys(defaultMenuData))
+          logger.debug('기본 메뉴 데이터 사용')
         }
       } catch (error) {
-        console.error('메뉴 데이터 로드 실패:', error)
+        logger.error('메뉴 데이터 로드 실패', error)
         // 에러 발생 시 기본 데이터 사용
+        menuCacheRef.current = defaultMenuData
         setMenuData(defaultMenuData)
         setCategories(Object.keys(defaultMenuData))
+      } finally {
+        perfMonitor.end('loadMenuData')
       }
     }
     loadMenuData()
@@ -50,14 +68,19 @@ function App() {
 
   // 메뉴 데이터 저장
   const handleSaveMenus = (newMenuData) => {
+    perfMonitor.start('saveMenuData')
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newMenuData))
+      localStorage.setItem(APP_CONFIG.storage.menuKey, JSON.stringify(newMenuData))
+      menuCacheRef.current = newMenuData
       setMenuData(newMenuData)
       setCategories(Object.keys(newMenuData))
       alert('메뉴가 성공적으로 저장되었습니다! 🎉')
+      logger.info('메뉴 데이터 저장 성공')
     } catch (error) {
-      console.error('메뉴 저장 실패:', error)
+      logger.error('메뉴 저장 실패', error)
       alert('메뉴 저장에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      perfMonitor.end('saveMenuData')
     }
   }
 
@@ -86,14 +109,24 @@ function App() {
 
   // Kakao SDK 로드 확인
   useEffect(() => {
+    perfMonitor.start('kakaoLoadCheck')
+    let attempts = 0
+    const maxAttempts = Math.ceil(APP_CONFIG.performance.kakaoLoadTimeout / 100)
+    
     const checkKakaoLoaded = () => {
       if (window.kakao && window.kakao.maps) {
         window.kakao.maps.load(() => {
           setKakaoLoaded(true)
-          console.log('Kakao Maps SDK loaded successfully')
+          logger.info('Kakao Maps SDK 로드 완료')
+          perfMonitor.end('kakaoLoadCheck')
         })
       } else {
-        console.error('Kakao Maps SDK not found')
+        attempts++
+        if (attempts >= maxAttempts) {
+          logger.warn('Kakao Maps SDK 로드 타임아웃')
+          perfMonitor.end('kakaoLoadCheck')
+          return
+        }
         setTimeout(checkKakaoLoaded, 100)
       }
     }
@@ -107,23 +140,23 @@ function App() {
       setSelectedCategory(null)
     } else {
       setSelectedCategory(category)
+      logger.debug(`카테고리 선택: ${category}`)
     }
     // 카테고리 변경 시 메뉴 초기화
     setSelectedMenu(null)
   }
 
-  // 랜덤 메뉴 추천 (3초 뽑기 효과)
-  // 카테고리가 선택되어 있으면 해당 카테고리에서만, 아니면 전체에서 추천
+  // 랜덤 메뉴 추천 (스피닝 효과)
   const handleRandomClick = () => {
+    perfMonitor.start('randomMenuSelection')
     setIsSpinning(true)
     setIsAnimating(true)
-    const currentCategory = selectedCategory // 현재 선택된 카테고리 저장
+    const currentCategory = selectedCategory
     setSelectedCategory('뽑는 중...')
     setSelectedMenu(null)
 
-    // 50ms마다 랜덤 메뉴 표시 (스피닝 효과)
+    // 스피닝 효과
     spinIntervalRef.current = setInterval(() => {
-      // 카테고리가 선택되어 있으면 해당 카테고리에서만, 아니면 전체에서
       if (currentCategory && currentCategory !== '뽑는 중...') {
         const menu = getRandomMenuFromCategory(currentCategory)
         setSpinningMenu(menu)
@@ -131,19 +164,17 @@ function App() {
         const { category, menu } = getRandomMenu()
         setSpinningMenu(menu)
       }
-    }, 50)
+    }, APP_CONFIG.performance.spinInterval)
 
-    // 3초 후 최종 메뉴 결정
+    // 최종 메뉴 결정
     setTimeout(() => {
       clearInterval(spinIntervalRef.current)
       let finalCategory, finalMenu
 
       if (currentCategory && currentCategory !== '뽑는 중...') {
-        // 선택된 카테고리에서만 추천
         finalCategory = currentCategory
         finalMenu = getRandomMenuFromCategory(currentCategory)
       } else {
-        // 전체 카테고리에서 랜덤 추천
         const result = getRandomMenu()
         finalCategory = result.category
         finalMenu = result.menu
@@ -154,7 +185,10 @@ function App() {
       setSelectedMenu(finalMenu)
       setSpinningMenu(null)
       setIsAnimating(false)
-    }, 3000)
+      
+      logger.info(`추천 메뉴: ${finalCategory} - ${finalMenu}`)
+      perfMonitor.end('randomMenuSelection')
+    }, APP_CONFIG.performance.spinDuration)
   }
 
   // 컴포넌트 언마운트 시 interval 정리
@@ -169,25 +203,28 @@ function App() {
   // 메뉴가 선택되면 자동으로 지도 표시
   useEffect(() => {
     if (selectedMenu && !isSpinning && kakaoLoaded) {
-      console.log('Menu selected, auto-opening map...')
+      logger.debug('지도 자동 표시 시작')
+      setIsLoadingMap(true)
 
       // 현재 위치 가져오기
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords
-            console.log('Location obtained:', latitude, longitude)
+            logger.debug(`위치 획득: ${latitude}, ${longitude}`)
             setCurrentLocation({ latitude, longitude })
             setShowMap(true)
             setSearchResults([])
+            setIsLoadingMap(false)
           },
           (error) => {
-            console.error('위치 정보 가져오기 실패:', error)
+            logger.warn('위치 정보 가져오기 실패', error)
             // 위치 정보 실패 시에도 지도는 표시하되 기본 위치 사용
             alert('위치 정보를 가져올 수 없습니다. 서울 시청 기준으로 검색합니다.')
-            setCurrentLocation({ latitude: 37.5665, longitude: 126.9780 }) // 서울 시청
+            setCurrentLocation({ latitude: 37.5665, longitude: 126.9780 })
             setShowMap(true)
             setSearchResults([])
+            setIsLoadingMap(false)
           },
           {
             enableHighAccuracy: true,
@@ -197,6 +234,7 @@ function App() {
         )
       } else {
         alert('이 브라우저는 위치 서비스를 지원하지 않습니다.')
+        setIsLoadingMap(false)
       }
     }
   }, [selectedMenu, isSpinning, kakaoLoaded])
@@ -207,37 +245,31 @@ function App() {
       return
     }
 
-    console.log('Initializing Kakao Map with:', {
-      showMap,
-      currentLocation,
-      selectedMenu,
-      kakaoLoaded
-    })
-
+    perfMonitor.start('mapInitialization')
     const { latitude, longitude } = currentLocation
 
     // 지도 컨테이너가 준비될 때까지 대기
     const timer = setTimeout(() => {
       if (!mapRef.current) {
-        console.error('Map container not found')
+        logger.error('지도 컨테이너를 찾을 수 없음')
         return
       }
 
       const container = mapRef.current
       const options = {
         center: new window.kakao.maps.LatLng(latitude, longitude),
-        level: 4 // 지도 확대 레벨 (1~14, 낮을수록 확대)
+        level: 4
       }
 
       try {
         // 지도 생성
         const map = new window.kakao.maps.Map(container, options)
         kakaoMapRef.current = map
-        console.log('Kakao Map created successfully')
+        logger.debug('Kakao 지도 생성 완료')
 
         // 현재 위치 마커 표시
         const markerPosition = new window.kakao.maps.LatLng(latitude, longitude)
-        const marker = new window.kakao.maps.Marker({
+        new window.kakao.maps.Marker({
           position: markerPosition,
           map: map
         })
@@ -245,23 +277,21 @@ function App() {
         // 장소 검색 객체 생성
         const ps = new window.kakao.maps.services.Places()
 
-        // 키워드로 장소 검색 (반경 5km 이내, 음식점만)
+        // 키워드로 장소 검색
         const searchOptions = {
           location: new window.kakao.maps.LatLng(latitude, longitude),
-          radius: 5000, // 5km 반경
-          sort: window.kakao.maps.services.SortBy.DISTANCE, // 거리순 정렬
-          category_group_code: 'FD6' // 음식점 카테고리 코드
+          radius: APP_CONFIG.performance.searchRadius,
+          sort: window.kakao.maps.services.SortBy.DISTANCE,
+          category_group_code: APP_CONFIG.kakao.categoryCode
         }
 
-        // 기본 메뉴로 검색 (예: 해물짬뽕 → 짬뽕)
         const searchKeyword = getBaseMenu(selectedMenu)
-        console.log('Searching for:', searchKeyword, '(original:', selectedMenu, ')', searchOptions)
+        logger.debug(`음식점 검색: ${searchKeyword}`)
 
         ps.keywordSearch(searchKeyword, (data, status) => {
-          console.log('Search result:', status, data)
-
           if (status === window.kakao.maps.services.Status.OK) {
             setSearchResults(data)
+            logger.info(`검색 결과: ${data.length}개 식당 발견`)
 
             // 기존 마커 제거
             markersRef.current.forEach(marker => marker.setMap(null))
@@ -271,19 +301,16 @@ function App() {
             const newMarkers = data.map((place, index) => {
               const placePosition = new window.kakao.maps.LatLng(place.y, place.x)
 
-              // 마커 생성
               const placeMarker = new window.kakao.maps.Marker({
                 position: placePosition,
                 map: map
               })
 
-              // 마커 클릭 시 상세 정보 표시
               window.kakao.maps.event.addListener(placeMarker, 'click', () => {
                 setSelectedPlace(place)
                 map.setCenter(placePosition)
               })
 
-              // 첫 번째 결과 위치로 지도 중심 이동
               if (index === 0) {
                 map.setCenter(placePosition)
                 setSelectedPlace(place)
@@ -293,60 +320,25 @@ function App() {
             })
 
             markersRef.current = newMarkers
+            perfMonitor.end('mapInitialization')
           } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
             setSearchResults([])
+            logger.warn('검색 결과 없음')
             alert('검색 결과가 없습니다. 다른 메뉴를 추천받아보세요!')
+            perfMonitor.end('mapInitialization')
           } else {
-            console.error('검색 실패:', status)
+            logger.error(`장소 검색 실패: ${status}`)
+            perfMonitor.end('mapInitialization')
           }
         }, searchOptions)
       } catch (error) {
-        console.error('Map initialization error:', error)
+        logger.error('지도 초기화 오류', error)
+        perfMonitor.end('mapInitialization')
       }
-    }, 200) // 지도 컨테이너 렌더링 대기
+    }, APP_CONFIG.performance.mapInitDelay)
 
     return () => clearTimeout(timer)
   }, [showMap, currentLocation, selectedMenu, kakaoLoaded])
-
-  // 카카오 지도에서 메뉴 검색
-  const handleMenuClick = () => {
-    if (!selectedMenu || isSpinning) {
-      console.log('Cannot open map:', { selectedMenu, isSpinning })
-      return
-    }
-
-    console.log('Menu clicked, getting location...')
-
-    // Kakao SDK 로드 확인
-    if (!kakaoLoaded) {
-      alert('지도를 불러오는 중입니다. 잠시만 기다려주세요.')
-      return
-    }
-
-    // 현재 위치 가져오기
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords
-          console.log('Location obtained:', latitude, longitude)
-          setCurrentLocation({ latitude, longitude })
-          setShowMap(true)
-          setSearchResults([])
-        },
-        (error) => {
-          console.error('위치 정보 가져오기 실패:', error)
-          alert('위치 정보를 가져올 수 없습니다. 위치 서비스를 활성화해주세요.')
-        },
-        {
-          enableHighAccuracy: true,  // 높은 정확도
-          timeout: 10000,            // 10초 타임아웃
-          maximumAge: 0              // 캐시 사용 안함 (실시간 위치)
-        }
-      )
-    } else {
-      alert('이 브라우저는 위치 서비스를 지원하지 않습니다.')
-    }
-  }
 
   // 지도 닫기
   const handleCloseMap = () => {
@@ -356,20 +348,24 @@ function App() {
     setSelectedPlace(null)
     kakaoMapRef.current = null
     markersRef.current = []
+    logger.debug('지도 닫기')
   }
 
   // 검색 결과 리스트에서 식당 클릭
   const handlePlaceClick = (place) => {
     setSelectedPlace(place)
+    logger.debug(`식당 선택: ${place.place_name}`)
     if (kakaoMapRef.current) {
       const position = new window.kakao.maps.LatLng(place.y, place.x)
       kakaoMapRef.current.setCenter(position)
-      kakaoMapRef.current.setLevel(3) // 줌 인
+      kakaoMapRef.current.setLevel(3)
     }
   }
 
   return (
     <div className={`app ${showMap ? 'show-map' : ''}`}>
+      {isLoadingMap && <LoadingSpinner message="지도 로딩 중..." />}
+      
       <div className="main-panel">
         <div className="container">
           <header className="header">
@@ -402,7 +398,7 @@ function App() {
           </div>
 
           <div className="random-section">
-            <button className="random-btn" onClick={handleRandomClick}>
+            <button className="random-btn" onClick={handleRandomClick} disabled={isSpinning}>
               🎲 랜덤 추천
             </button>
             {selectedCategory && !isSpinning && !selectedMenu && (

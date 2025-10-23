@@ -32,39 +32,18 @@ export function getAllMenus() {
 /**
  * 검색어에 따라 메뉴 검색
  * @param {string} query - 검색어
- * @param {Object} filters - 필터 옵션 { category, minCalories, maxCalories, minPrice, maxPrice, tags }
+ * @param {Object} filters - 필터 옵션 { category, tags }
  * @returns {Array} 검색 결과 배열
  */
 export function searchMenus(query = '', filters = {}) {
   const allMenus = getAllMenus()
   let results = [...allMenus]
-  
+
   // 카테고리 필터
   if (filters.category && filters.category !== '전체') {
     results = results.filter(item => item.category === filters.category)
   }
-  
-  // 칼로리 필터
-  if (filters.minCalories !== undefined) {
-    results = results.filter(item => item.detail.calories >= filters.minCalories)
-  }
-  if (filters.maxCalories !== undefined) {
-    results = results.filter(item => item.detail.calories <= filters.maxCalories)
-  }
-  
-  // 가격 필터
-  if (filters.minPrice !== undefined) {
-    results = results.filter(item => item.detail.price >= filters.minPrice)
-  }
-  if (filters.maxPrice !== undefined) {
-    results = results.filter(item => item.detail.price <= filters.maxPrice)
-  }
-  
-  // 준비시간 필터
-  if (filters.maxPrepTime !== undefined) {
-    results = results.filter(item => item.detail.preparationTime <= filters.maxPrepTime)
-  }
-  
+
   // 태그 필터 (모든 선택된 태그를 포함해야 함)
   if (filters.tags && filters.tags.length > 0) {
     results = results.filter(item => {

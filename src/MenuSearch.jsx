@@ -24,11 +24,6 @@ function MenuSearch({ onSelectMenu, onShowDetail }) {
   // 필터 상태
   const [filters, setFilters] = useState({
     category: '전체',
-    minCalories: '',
-    maxCalories: '',
-    minPrice: '',
-    maxPrice: '',
-    maxPrepTime: '',
     tags: []
   })
   const [showFilters, setShowFilters] = useState(false)
@@ -106,11 +101,6 @@ function MenuSearch({ onSelectMenu, onShowDetail }) {
     
     const results = searchMenus(query, {
       category: filters.category === '전체' ? undefined : filters.category,
-      minCalories: filters.minCalories ? parseInt(filters.minCalories) : undefined,
-      maxCalories: filters.maxCalories ? parseInt(filters.maxCalories) : undefined,
-      minPrice: filters.minPrice ? parseInt(filters.minPrice) : undefined,
-      maxPrice: filters.maxPrice ? parseInt(filters.maxPrice) : undefined,
-      maxPrepTime: filters.maxPrepTime ? parseInt(filters.maxPrepTime) : undefined,
       tags: filters.tags
     })
     
@@ -195,11 +185,6 @@ function MenuSearch({ onSelectMenu, onShowDetail }) {
   const handleResetFilters = () => {
     setFilters({
       category: '전체',
-      minCalories: '',
-      maxCalories: '',
-      minPrice: '',
-      maxPrice: '',
-      maxPrepTime: '',
       tags: []
     })
     
@@ -362,62 +347,6 @@ function MenuSearch({ onSelectMenu, onShowDetail }) {
                 </button>
               ))}
             </div>
-          </div>
-          
-          {/* 칼로리 필터 */}
-          <div className="filter-group">
-            <label className="filter-label">칼로리 (kcal)</label>
-            <div className="range-inputs">
-              <input
-                type="number"
-                className="range-input"
-                placeholder="최소"
-                value={filters.minCalories}
-                onChange={(e) => handleFilterChange('minCalories', e.target.value)}
-              />
-              <span className="range-separator">~</span>
-              <input
-                type="number"
-                className="range-input"
-                placeholder="최대"
-                value={filters.maxCalories}
-                onChange={(e) => handleFilterChange('maxCalories', e.target.value)}
-              />
-            </div>
-          </div>
-          
-          {/* 가격 필터 */}
-          <div className="filter-group">
-            <label className="filter-label">가격 (원)</label>
-            <div className="range-inputs">
-              <input
-                type="number"
-                className="range-input"
-                placeholder="최소"
-                value={filters.minPrice}
-                onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-              />
-              <span className="range-separator">~</span>
-              <input
-                type="number"
-                className="range-input"
-                placeholder="최대"
-                value={filters.maxPrice}
-                onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-              />
-            </div>
-          </div>
-          
-          {/* 준비시간 필터 */}
-          <div className="filter-group">
-            <label className="filter-label">최대 준비시간 (분)</label>
-            <input
-              type="number"
-              className="range-input full-width"
-              placeholder="최대 준비시간"
-              value={filters.maxPrepTime}
-              onChange={(e) => handleFilterChange('maxPrepTime', e.target.value)}
-            />
           </div>
           
           {/* 태그 필터 */}

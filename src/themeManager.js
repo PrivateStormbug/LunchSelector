@@ -54,13 +54,13 @@ const THEMES = {
 
 /**
  * 시스템 기본 테마 감지
+ * 기본값: 라이트 모드
  * @returns {string} 'light' 또는 'dark'
  */
 export function getSystemTheme() {
   try {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark'
-    }
+    // 기본값을 라이트 모드로 설정
+    // OS 설정 대신 항상 라이트모드를 기본값으로 사용
     return 'light'
   } catch (error) {
     logger.debug('시스템 테마 감지 실패, 라이트 모드 사용')

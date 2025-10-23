@@ -597,27 +597,10 @@
   }
 }
 
-/* ============ 다크모드 지원 ============ */
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --search-bg-light: #2a2a2a;
-    --search-text: #ffffff;
-    --search-text-light: #b0b0b0;
-    --search-border: #404040;
-  }
-  
-  .search-input,
-  .search-button,
-  .filter-toggle,
-  .suggestions-dropdown,
-  .filters-panel,
-  .result-card {
-    background: #1e1e1e;
-    color: var(--search-text);
-  }
-  
-  .suggestion-item:hover {
-    background: #2a2a2a;
-  }
-}
+/* ============ 다크모드 주의 ============ */
+/*
+  NOTE: @media (prefers-color-scheme: dark) 제거됨
+  - 브라우저/OS 레벨 다크모드가 라이트 모드 스타일을 덮어쓰는 문제 해결
+  - App.jsx의 themeManager로만 테마 관리
+  - 항상 라이트 모드 스타일만 적용
+*/

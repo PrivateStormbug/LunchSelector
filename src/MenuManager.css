@@ -24,7 +24,7 @@
 
 /* 모달 창 */
 .menu-manager-modal {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #ff9b7b 0%, #ff8c69 100%);
   border-radius: 24px;
   width: 90%;
   max-width: 900px;
@@ -117,7 +117,7 @@
 }
 
 .category-tab.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #ff9b7b 0%, #ff8c69 100%);
   color: white;
   border-color: transparent;
 }
@@ -164,8 +164,8 @@
 
 .category-select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #ff9b7b;
+  box-shadow: 0 0 0 3px rgba(255, 155, 123, 0.1);
 }
 
 .category-select:disabled {
@@ -186,8 +186,8 @@
 
 .menu-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #ff9b7b;
+  box-shadow: 0 0 0 3px rgba(255, 155, 123, 0.1);
 }
 
 .menu-input:disabled {
@@ -199,7 +199,7 @@
 
 .add-btn {
   padding: 14px 28px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #ff9b7b 0%, #ff8c69 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -212,7 +212,7 @@
 
 .add-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 20px rgba(255, 155, 123, 0.4);
 }
 
 .add-btn:disabled {
@@ -238,8 +238,8 @@
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #ff9b7b;
+  box-shadow: 0 0 0 3px rgba(255, 155, 123, 0.1);
 }
 
 .clear-search-btn {
@@ -322,7 +322,7 @@
 
 .menu-category-tag {
   display: inline-block;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #ff9b7b 0%, #ff8c69 100%);
   color: white;
   padding: 4px 12px;
   border-radius: 6px;
@@ -387,7 +387,7 @@
 .menu-edit-input {
   flex: 1;
   padding: 8px 12px;
-  border: 2px solid #667eea;
+  border: 2px solid #ff9b7b;
   border-radius: 8px;
   font-size: 16px;
   margin-right: 8px;
@@ -395,7 +395,7 @@
 
 .menu-edit-input:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(255, 155, 123, 0.1);
 }
 
 /* 빈 메시지 */
@@ -411,7 +411,7 @@
   display: flex;
   gap: 20px;
   padding: 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #ff9b7b 0%, #ff8c69 100%);
   border-radius: 12px;
   color: white;
 }
@@ -480,13 +480,13 @@
 
 .save-btn {
   background: white;
-  color: #667eea;
+  color: #ff9b7b;
 }
 
 .save-btn:hover {
   background: #f8f9fa;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 20px rgba(255, 155, 123, 0.3);
 }
 
 /* 반응형 디자인 */

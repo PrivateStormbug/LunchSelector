@@ -628,20 +628,20 @@
   }
 }
 
-/* 다크모드 지원 */
+/* 라이트 테마 유지 - 다크모드에서도 통일된 디자인 */
 @media (prefers-color-scheme: dark) {
   .recommendation-panel {
-    background: rgba(30, 30, 30, 0.8);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.65);
+    border-color: rgba(255, 255, 255, 0.5);
   }
 
   .panel-tabs {
-    background: rgba(30, 30, 30, 0.6);
-    border-bottom-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.4);
+    border-bottom-color: rgba(255, 255, 255, 0.5);
   }
 
   .tab-btn {
-    color: #b0b0b0;
+    color: #a89968;
   }
 
   .tab-btn:hover {
@@ -649,58 +649,58 @@
   }
 
   .tab-btn.active {
-    background: rgba(255, 155, 123, 0.15);
+    background: rgba(255, 155, 123, 0.1);
     color: #ff9b7b;
   }
 
   .recommendation-card {
-    background: rgba(42, 42, 42, 0.8);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.65);
+    border-color: rgba(255, 255, 255, 0.5);
   }
 
   .card-menu-name {
-    color: #ffffff;
+    color: #3d3a35;
   }
 
   .card-reason,
   .card-details {
-    color: #b0b0b0;
+    color: #a89968;
   }
 
   .action-btn {
-    background: rgba(42, 42, 42, 0.8);
-    color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.6);
+    color: #3d3a35;
+    border-color: rgba(255, 255, 255, 0.5);
   }
 
   .rating-btn {
-    background: rgba(42, 42, 42, 0.8);
-    color: #b0b0b0;
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.6);
+    color: #a89968;
+    border-color: rgba(255, 255, 255, 0.5);
   }
 
   .stat-card {
-    background: rgba(42, 42, 42, 0.8);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.65);
+    border-color: rgba(255, 255, 255, 0.5);
   }
 
   .rating-bar-container {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.5);
   }
 
   .stat-label,
   .rating-label {
-    color: #b0b0b0;
+    color: #a89968;
   }
 
   .stat-value,
   .rating-count,
   .rating-title,
   .no-data p:first-of-type {
-    color: #ffffff;
+    color: #3d3a35;
   }
 
   .no-data-hint {
-    color: #b0b0b0;
+    color: #a89968;
   }
 }

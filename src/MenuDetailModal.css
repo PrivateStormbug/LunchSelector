@@ -556,115 +556,134 @@
 }
 
 /* 다크모드 지원 */
-@media (prefers-color-scheme: dark) {
-  .menu-detail-modal {
-    background: rgba(30, 30, 30, 0.8);
-    border-color: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-  }
+html.dark-mode .menu-detail-modal {
+  background: rgba(45, 45, 45, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+}
 
-  .modal-close-btn {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-  }
+html.dark-mode .menu-detail-modal::-webkit-scrollbar-thumb {
+  background: rgba(255, 155, 123, 0.5);
+}
 
-  .modal-close-btn:hover {
-    background: #ff9b7b;
-  }
+html.dark-mode .menu-detail-modal::-webkit-scrollbar-thumb:hover {
+  background: #ff9b7b;
+}
 
-  .modal-header,
-  .modal-description,
-  .modal-tabs,
-  .tab-btn {
-    border-color: rgba(255, 255, 255, 0.1);
-  }
+html.dark-mode .modal-close-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+}
 
-  .modal-title {
-    color: #ffffff;
-  }
+html.dark-mode .modal-close-btn:hover {
+  background: #ff9b7b;
+  color: white;
+}
 
-  .modal-description,
-  .info-label,
-  .info-text,
-  .card-details {
-    color: #b0b0b0;
-  }
+html.dark-mode .modal-header,
+html.dark-mode .modal-description,
+html.dark-mode .modal-tabs {
+  border-color: rgba(255, 255, 255, 0.1);
+}
 
-  .tab-btn {
-    color: #b0b0b0;
-  }
+html.dark-mode .modal-title {
+  color: #ffffff;
+}
 
-  .tab-btn:hover {
-    color: #ff9b7b;
-  }
+html.dark-mode .modal-description,
+html.dark-mode .info-label,
+html.dark-mode .info-text,
+html.dark-mode .card-details {
+  color: #b0b0b0;
+}
 
-  .tab-btn.active {
-    background: rgba(255, 155, 123, 0.1);
-    color: #ff9b7b;
-  }
+html.dark-mode .tab-btn {
+  color: #b0b0b0;
+}
 
-  .info-item {
-    background: rgba(255, 255, 255, 0.1);
-  }
+html.dark-mode .tab-btn:hover {
+  color: #ff9b7b;
+}
 
-  .info-label-bold {
-    color: #ffffff;
-  }
+html.dark-mode .tab-btn.active {
+  background: rgba(255, 155, 123, 0.1);
+  color: #ff9b7b;
+  border-bottom-color: #ff9b7b;
+}
 
-  .tag {
-    background: rgba(255, 155, 123, 0.15);
-  }
+html.dark-mode .info-item {
+  background: rgba(60, 60, 60, 0.8);
+}
 
-  .nutrition-bar {
-    background: rgba(255, 255, 255, 0.1);
-  }
+html.dark-mode .info-label-bold {
+  color: #ffffff;
+}
 
-  .nutrition-label,
-  .qr-code-hint {
-    color: #b0b0b0;
-  }
+html.dark-mode .tag {
+  background: rgba(255, 155, 123, 0.15);
+  color: #ff9b7b;
+}
 
-  .nutrition-value {
-    color: #ffffff;
-  }
+html.dark-mode .nutrition-bar {
+  background: rgba(60, 60, 60, 0.8);
+}
 
-  .nutrition-summary {
-    background: rgba(255, 255, 255, 0.1);
-  }
+html.dark-mode .nutrition-label,
+html.dark-mode .qr-code-hint {
+  color: #b0b0b0;
+}
 
-  .nutrition-summary h4 {
-    color: #b0b0b0;
-  }
+html.dark-mode .nutrition-value {
+  color: #ffffff;
+}
 
-  .nutrition-summary p {
-    color: #ffffff;
-  }
+html.dark-mode .nutrition-summary {
+  background: rgba(60, 60, 60, 0.8);
+}
 
-  .share-menu,
-  .qr-code-block {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
+html.dark-mode .nutrition-summary h4 {
+  color: #b0b0b0;
+}
 
-  .share-menu-title {
-    color: #ffffff;
-  }
+html.dark-mode .nutrition-summary p {
+  color: #ffffff;
+}
 
-  .share-option {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-  }
+html.dark-mode .share-menu,
+html.dark-mode .qr-code-block {
+  background: rgba(60, 60, 60, 0.8);
+  border-color: rgba(255, 255, 255, 0.1);
+}
 
-  .action-btn.secondary {
-    background: rgba(255, 255, 255, 0.1);
-    color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.1);
-  }
+html.dark-mode .share-menu-title {
+  color: #ffffff;
+}
 
-  .action-btn.secondary:hover {
-    background: rgba(255, 155, 123, 0.15);
-    border-color: #ff9b7b;
-    color: #ff9b7b;
-  }
+html.dark-mode .share-option {
+  background: rgba(60, 60, 60, 0.8);
+  border-color: rgba(255, 155, 123, 0.3);
+  color: #e0e0e0;
+}
+
+html.dark-mode .share-option:hover {
+  background: #ff9b7b;
+  color: white;
+  border-color: #ff9b7b;
+}
+
+html.dark-mode .action-btn.secondary {
+  background: rgba(60, 60, 60, 0.8);
+  color: #e0e0e0;
+  border-color: rgba(255, 155, 123, 0.3);
+}
+
+html.dark-mode .action-btn.secondary:hover {
+  background: rgba(255, 155, 123, 0.15);
+  border-color: #ff9b7b;
+  color: #ff9b7b;
+}
+
+html.dark-mode .qr-code-image {
+  background: white;
+  border-color: rgba(255, 255, 255, 0.2);
 }

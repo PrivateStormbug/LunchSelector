@@ -22,7 +22,7 @@
 }
 
 /* 다크 모드 */
-:root.dark-mode {
+html.dark-mode {
   --color-background: #1a1a1a;
   --color-surface: #2d2d2d;
   --color-text: #ffffff;
@@ -109,9 +109,9 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-:root.dark-mode input:focus,
-:root.dark-mode textarea:focus,
-:root.dark-mode select:focus {
+html.dark-mode input:focus,
+html.dark-mode textarea:focus,
+html.dark-mode select:focus {
   box-shadow: 0 0 0 3px rgba(124, 143, 245, 0.2);
 }
 

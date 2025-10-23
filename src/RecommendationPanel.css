@@ -628,79 +628,114 @@
   }
 }
 
-/* 라이트 테마 유지 - 다크모드에서도 통일된 디자인 */
-@media (prefers-color-scheme: dark) {
-  .recommendation-panel {
-    background: rgba(255, 255, 255, 0.65);
-    border-color: rgba(255, 255, 255, 0.5);
-  }
+/* 다크모드 지원 */
+html.dark-mode .recommendation-panel {
+  background: rgba(45, 45, 45, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+}
 
-  .panel-tabs {
-    background: rgba(255, 255, 255, 0.4);
-    border-bottom-color: rgba(255, 255, 255, 0.5);
-  }
+html.dark-mode .panel-tabs {
+  background: rgba(60, 60, 60, 0.8);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
 
-  .tab-btn {
-    color: #a89968;
-  }
+html.dark-mode .tab-btn {
+  color: #b0b0b0;
+}
 
-  .tab-btn:hover {
-    color: #ff9b7b;
-  }
+html.dark-mode .tab-btn:hover {
+  color: #ff9b7b;
+}
 
-  .tab-btn.active {
-    background: rgba(255, 155, 123, 0.1);
-    color: #ff9b7b;
-  }
+html.dark-mode .tab-btn.active {
+  background: rgba(255, 155, 123, 0.1);
+  color: #ff9b7b;
+  border-bottom-color: #ff9b7b;
+}
 
-  .recommendation-card {
-    background: rgba(255, 255, 255, 0.65);
-    border-color: rgba(255, 255, 255, 0.5);
-  }
+html.dark-mode .panel-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 155, 123, 0.5);
+}
 
-  .card-menu-name {
-    color: #3d3a35;
-  }
+html.dark-mode .panel-content::-webkit-scrollbar-thumb:hover {
+  background: #ff9b7b;
+}
 
-  .card-reason,
-  .card-details {
-    color: #a89968;
-  }
+html.dark-mode .recommendation-card {
+  background: rgba(60, 60, 60, 0.8);
+  border-color: rgba(255, 155, 123, 0.2);
+}
 
-  .action-btn {
-    background: rgba(255, 255, 255, 0.6);
-    color: #3d3a35;
-    border-color: rgba(255, 255, 255, 0.5);
-  }
+html.dark-mode .card-menu-name {
+  color: #e0e0e0;
+}
 
-  .rating-btn {
-    background: rgba(255, 255, 255, 0.6);
-    color: #a89968;
-    border-color: rgba(255, 255, 255, 0.5);
-  }
+html.dark-mode .card-reason,
+html.dark-mode .card-details {
+  color: #b0b0b0;
+}
 
-  .stat-card {
-    background: rgba(255, 255, 255, 0.65);
-    border-color: rgba(255, 255, 255, 0.5);
-  }
+html.dark-mode .action-btn {
+  background: rgba(60, 60, 60, 0.8);
+  color: #e0e0e0;
+  border-color: rgba(255, 155, 123, 0.3);
+}
 
-  .rating-bar-container {
-    background: rgba(255, 255, 255, 0.5);
-  }
+html.dark-mode .action-btn:hover {
+  border-color: #ff9b7b;
+  color: #ff9b7b;
+}
 
-  .stat-label,
-  .rating-label {
-    color: #a89968;
-  }
+html.dark-mode .rating-btn {
+  background: rgba(60, 60, 60, 0.8);
+  color: #b0b0b0;
+  border-color: rgba(255, 155, 123, 0.3);
+}
 
-  .stat-value,
-  .rating-count,
-  .rating-title,
-  .no-data p:first-of-type {
-    color: #3d3a35;
-  }
+html.dark-mode .rating-btn:hover {
+  border-color: #ff9b7b;
+  color: #ff9b7b;
+}
 
-  .no-data-hint {
-    color: #a89968;
-  }
+html.dark-mode .rating-btn.selected {
+  background: linear-gradient(135deg, #ff9b7b 0%, #ff8c69 100%);
+  color: white;
+  border-color: transparent;
+}
+
+html.dark-mode .stat-card {
+  background: rgba(60, 60, 60, 0.8);
+  border-color: rgba(255, 155, 123, 0.2);
+}
+
+html.dark-mode .rating-bar-container {
+  background: rgba(60, 60, 60, 0.8);
+}
+
+html.dark-mode .stat-label,
+html.dark-mode .rating-label {
+  color: #b0b0b0;
+}
+
+html.dark-mode .stat-value,
+html.dark-mode .rating-count,
+html.dark-mode .rating-title,
+html.dark-mode .no-data p:first-of-type {
+  color: #e0e0e0;
+}
+
+html.dark-mode .no-data-hint {
+  color: #b0b0b0;
+}
+
+html.dark-mode .loading p {
+  color: #b0b0b0;
+}
+
+html.dark-mode .feedback-question {
+  color: #e0e0e0;
+}
+
+html.dark-mode .feedback-section {
+  border-top-color: rgba(255, 255, 255, 0.1);
 }

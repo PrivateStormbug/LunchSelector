@@ -90,23 +90,23 @@ export const logger = {
 // 성능 모니터링
 export const performance = {
   marks: {},
-  
+
   start: (name) => {
     performance.marks[name] = {
-      start: performance.now(),
+      start: window.performance.now(),
       label: name
     }
   },
-  
+
   end: (name) => {
     if (!performance.marks[name]) {
       logger.warn(`Performance mark '${name}' not found`)
       return 0
     }
-    
-    const duration = performance.now() - performance.marks[name].start
+
+    const duration = window.performance.now() - performance.marks[name].start
     logger.debug(`${name} took ${duration.toFixed(2)}ms`, { name, duration })
-    
+
     delete performance.marks[name]
     return duration
   }

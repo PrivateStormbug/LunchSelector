@@ -63,6 +63,41 @@
   font-size: 0.8rem;
 }
 
+/* Recommendation Toggle Button */
+.recommendation-toggle-btn {
+  padding: 3% 2%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0.25rem 1rem rgba(102, 126, 234, 0.25);
+  white-space: nowrap;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.5rem;
+}
+
+.recommendation-toggle-btn:hover {
+  transform: translateY(-0.25rem) scale(1.02);
+  box-shadow: 0 0.75rem 1.5rem rgba(102, 126, 234, 0.35);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.recommendation-toggle-btn:active {
+  transform: translateY(0);
+}
+
+.app.show-map .recommendation-toggle-btn {
+  padding: 2% 3%;
+  font-size: 0.8rem;
+}
+
 .main-panel {
   width: 100%;
   min-height: 100vh;

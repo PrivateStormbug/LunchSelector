@@ -4,12 +4,14 @@ import MenuManager from './MenuManager'
 import LoadingSpinner from './LoadingSpinner'
 import MenuDetailModal from './MenuDetailModal'
 import MenuSearch from './MenuSearch'
+import RecommendationPanel from './RecommendationPanel'
 import { APP_CONFIG, logger, performance as perfMonitor } from './config.js'
 import { waitForKakaoMapsReady } from './kakaoMapUtils'
 import { validateMenuData, sanitizeMenuData } from './dataValidator'
 import { addToHistory } from './historyManager'
 import { initMarkerPool, getMarkerPool, createMarkersFromPlaces, cleanupMarkers } from './mapMarkerManager'
 import { recordMenuView } from './searchManager'
+import { generateAIRecommendations } from './recommendationManager'
 import './App.css'
 
 function App() {
@@ -30,6 +32,7 @@ function App() {
   const [categories, setCategories] = useState([])
   const [isLoadingMap, setIsLoadingMap] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
+  const [showRecommendation, setShowRecommendation] = useState(false)
   const spinIntervalRef = useRef(null)
   const mapRef = useRef(null)
   const kakaoMapRef = useRef(null)
@@ -450,6 +453,22 @@ function App() {
     }
   }
 
+  // RecommendationPanel에서 추천 메뉴 선택
+  const handleSelectFromRecommendation = (category, menu) => {
+    setSelectedCategory(category)
+    setSelectedMenu(menu)
+    addToHistory(category, menu)
+    setShowRecommendation(false)
+    logger.debug(`추천에서 메뉴 선택: ${category} - ${menu}`)
+  }
+
+  // RecommendationPanel에서 메뉴 상세정보 표시
+  const handleShowDetailFromRecommendation = (category, menu) => {
+    setMenuDetailInfo({ category, menu })
+    setShowMenuDetail(true)
+    logger.debug(`추천에서 상세정보 표시: ${category} - ${menu}`)
+  }
+
   return (
     <div className={`app ${showMap ? 'show-map' : ''}`}>
       {isLoadingMap && <LoadingSpinner message="지도 로딩 중..." />}
@@ -468,6 +487,13 @@ function App() {
                 title="메뉴 검색"
               >
                 🔍 검색
+              </button>
+              <button
+                className="recommendation-toggle-btn"
+                onClick={() => setShowRecommendation(!showRecommendation)}
+                title="AI 추천"
+              >
+                💡 AI 추천
               </button>
               <button
                 className="menu-manage-btn"
@@ -673,6 +699,16 @@ function App() {
           menu={menuDetailInfo.menu}
           onClose={handleCloseMenuDetail}
           onShare={handleShareMenu}
+        />
+      )}
+
+      {/* AI 추천 패널 */}
+      {showRecommendation && (
+        <RecommendationPanel
+          onSelectMenu={handleSelectFromRecommendation}
+          onShowDetail={handleShowDetailFromRecommendation}
+          isVisible={showRecommendation}
+          onClose={() => setShowRecommendation(false)}
         />
       )}
     </div>

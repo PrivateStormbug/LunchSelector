@@ -42,11 +42,26 @@ function MenuSearch({ onSelectMenu, onShowDetail }) {
   const searchInputRef = useRef(null)
   const suggestionsRef = useRef(null)
   
+  // 드롭다운 위치
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 })
+  
   // 초기화
   useEffect(() => {
     setSearchHistory(getSearchHistory())
     setAvailableTags(getAllAvailableTags())
   }, [])
+  
+  // 드롭다운 위치 계산
+  useEffect(() => {
+    if (searchInputRef.current) {
+      const rect = searchInputRef.current.getBoundingClientRect()
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      })
+    }
+  }, [showSuggestions])
   
   // 검색어 변경 시 자동완성 업데이트
   useEffect(() => {
@@ -261,7 +276,15 @@ function MenuSearch({ onSelectMenu, onShowDetail }) {
       
       {/* 자동완성 드롭다운 */}
       {showSuggestions && (
-        <div className="suggestions-dropdown" ref={suggestionsRef}>
+        <div 
+          className="suggestions-dropdown" 
+          ref={suggestionsRef}
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            width: `${dropdownPosition.width}px`
+          }}
+        >
           {/* 제안된 항목 */}
           {suggestions.length > 0 && (
             <div className="suggestions-group">

@@ -73,55 +73,104 @@ export const isKakaoMapsReady = () => {
 
 /**
  * Kakao Maps 장소 검색 수행
- * @param {object} options - 검색 옵션
+ * @param {object} options - 검색 옵션 { keyword, searchOptions }
  * @returns {Promise<Array>} 검색 결과
  */
 export const searchPlaces = (options) => {
   return new Promise((resolve, reject) => {
     if (!isKakaoMapsReady()) {
-      reject(new Error('Kakao Maps API가 준비되지 않았습니다.'))
+      const error = new Error('Kakao Maps API가 준비되지 않았습니다.')
+      logger.error('searchPlaces 실패', error)
+      reject(error)
+      return
+    }
+
+    if (!options || !options.keyword) {
+      const error = new Error('검색어(keyword)가 필요합니다.')
+      logger.error('searchPlaces 파라미터 오류', error)
+      reject(error)
       return
     }
 
     try {
       const placesService = new window.kakao.maps.services.Places()
+      const keyword = String(options.keyword).trim()
 
-      // searchOptions 기본값 설정
-      const searchOptions = {
-        location: options.searchOptions?.location,
-        radius: options.searchOptions?.radius || 1000,
-        sort: options.searchOptions?.sort || window.kakao.maps.services.SortBy.DISTANCE,
-        size: options.searchOptions?.size || 20,
-        page: options.searchOptions?.page || 1
+      if (!keyword) {
+        throw new Error('빈 검색어는 검색할 수 없습니다.')
       }
+
+      // searchOptions 구성 (필수 항목만 포함)
+      const searchOptions = {}
+
+      // location 설정 (필수)
+      if (options.searchOptions?.location) {
+        searchOptions.location = options.searchOptions.location
+        logger.debug(`검색 위치 설정: ${options.searchOptions.location}`)
+      }
+
+      // radius 설정 (선택)
+      if (options.searchOptions?.radius) {
+        searchOptions.radius = Number(options.searchOptions.radius)
+        logger.debug(`검색 반경: ${searchOptions.radius}m`)
+      }
+
+      // size 설정 (선택)
+      if (options.searchOptions?.size) {
+        searchOptions.size = Number(options.searchOptions.size)
+      }
+
+      // page 설정 (선택)
+      if (options.searchOptions?.page) {
+        searchOptions.page = Number(options.searchOptions.page)
+      }
+
+      // 최소한 location은 있어야 함
+      if (!searchOptions.location) {
+        logger.warn('location이 없습니다. 기본 검색을 수행합니다.')
+      }
+
+      logger.debug(`카카오맵 검색 시작: "${keyword}"`)
+      logger.debug(`searchOptions:`, searchOptions)
 
       // 콜백 함수 정의
       const callback = (data, status) => {
+        logger.debug(`카카오맵 검색 콜백 호출 - status: ${status}`)
+
+        // status가 null이거나 undefined인 경우 처리
+        if (!status) {
+          const error = new Error('카카오맵 API가 응답하지 않습니다. (status: null) - 네트워크 오류이거나 API 요청 형식이 잘못되었습니다.')
+          logger.error('장소 검색 실패 - null status', error)
+          reject(error)
+          return
+        }
+
         if (status === window.kakao.maps.services.Status.OK) {
-          logger.debug(`장소 검색 완료: ${data.length}개 결과`)
+          logger.info(`✅ 장소 검색 완료: ${data.length}개 결과`)
           resolve(data)
         } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
-          logger.warn('검색 결과 없음')
+          logger.warn('⚠️ 검색 결과 없음')
           resolve([])
         } else if (status === window.kakao.maps.services.Status.ERROR_RESPONSE) {
-          const error = new Error('카카오맵 API 서버 오류 (ERROR_RESPONSE)')
-          logger.error('장소 검색 실패 - API 오류', error)
+          const error = new Error('❌ 카카오맵 API 서버 오류 (ERROR_RESPONSE)')
+          logger.error('장소 검색 실패', error)
           reject(error)
         } else if (status === window.kakao.maps.services.Status.INVALID_PARAMS) {
-          const error = new Error('카카오맵 API 매개변수 오류 (INVALID_PARAMS)')
-          logger.error('장소 검색 실패 - 잘못된 매개변수', error)
+          const error = new Error('❌ 카카오맵 API 요청 형식 오류 (INVALID_PARAMS)')
+          logger.error('장소 검색 실패', error)
           reject(error)
         } else {
-          const error = new Error(`장소 검색 실패: ${status}`)
+          const error = new Error(`❌ 장소 검색 실패: ${status}`)
           logger.error('장소 검색 실패', error)
           reject(error)
         }
       }
 
       // 검색 실행
-      placesService.keywordSearch(options.keyword, callback, searchOptions)
+      logger.debug(`Places.keywordSearch 호출: "${keyword}"`)
+      placesService.keywordSearch(keyword, callback, searchOptions)
     } catch (error) {
-      logger.error('카카오맵 검색 중 예외 발생', error)
+      logger.error('❌ 카카오맵 검색 중 예외 발생', error)
       reject(new Error(`카카오맵 검색 오류: ${error.message}`))
     }
   })

@@ -71,9 +71,13 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
    * 현재 위치 근처 음식점 검색
    */
   const searchNearbyRestaurants = async (latitude, longitude) => {
-    // 카카오맵 준비 확인 및 대기
     try {
-      // 카카오맵이 로드되지 않으면 기본 추천 실행
+      // 입력값 검증
+      if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+        throw new Error('위치 정보가 유효하지 않습니다.')
+      }
+
+      // 카카오맵 준비 확인
       if (!isKakaoMapsReady()) {
         console.warn('⚠️ 카카오맵 API가 준비되지 않았습니다.')
         console.log('📌 기본 추천으로 진행합니다.')
@@ -82,35 +86,43 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
       }
 
       console.log('🔍 카카오맵에서 근처 음식점 검색 중...')
-      console.log(`📍 검색 위치: ${latitude}, ${longitude}`)
+      console.log(`📍 검색 위치: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`)
 
-      // Kakao Maps LatLng 객체 생성 확인
-      if (!window.kakao || !window.kakao.maps || !window.kakao.maps.LatLng) {
-        throw new Error('Kakao Maps LatLng 객체를 생성할 수 없습니다.')
+      // Kakao Maps 객체 존재 확인
+      if (!window.kakao?.maps?.LatLng) {
+        throw new Error('Kakao Maps API가 제대로 로드되지 않았습니다.')
       }
 
+      // LatLng 객체 생성
+      const searchLocation = new window.kakao.maps.LatLng(latitude, longitude)
+      console.log(`📍 LatLng 객체 생성: ${searchLocation}`)
+
       // 카카오맵 API로 현재 위치 근처의 음식점 검색
+      console.log('🔄 searchPlaces 호출 중...')
       const results = await searchPlaces({
         keyword: '음식점',
         searchOptions: {
-          location: new window.kakao.maps.LatLng(latitude, longitude),
+          location: searchLocation,
           radius: 1000, // 1km 범위
-          size: 20,
-          sort: window.kakao.maps.services.SortBy.DISTANCE // 거리순 정렬
+          size: 20
         }
       })
 
-      if (results && results.length > 0) {
+      if (results && Array.isArray(results) && results.length > 0) {
         console.log(`✅ 근처 음식점 검색 완료: ${results.length}개`)
         setNearbyRestaurants(results)
       } else {
         console.log('⚠️ 검색 결과가 없습니다. 기본 추천으로 진행합니다.')
+        setNearbyRestaurants([])
         generateRecommendations()
       }
     } catch (error) {
-      console.error('❌ 음식점 검색 실패:', error.message)
+      console.error('❌ 음식점 검색 오류:', error)
+      console.error('에러 메시지:', error.message)
       console.log('📌 기본 추천으로 폴백합니다.')
+
       // 음식점 검색 실패 시 기본 추천 실행
+      setNearbyRestaurants([])
       generateRecommendations()
     }
   }

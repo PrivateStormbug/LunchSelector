@@ -198,7 +198,8 @@ export const searchPlaces = (options) => {
         logger.debug(`키워드 기반 검색 수행`)
       }
 
-      // API 호출 (Authorization 헤더 형식: KakaoAK {API_KEY})
+      // API 호출 (Authorization 헤더와 appkey 파라미터 함께 사용)
+      params.append('appkey', apiKey)
       const url = `https://dapi.kakao.com/v2/local/search/keyword.json?${params.toString()}`
       console.log('[searchPlaces] REST API 요청 URL:', url)
       logger.debug(`카카오맵 REST API 호출: ${keyword}`)

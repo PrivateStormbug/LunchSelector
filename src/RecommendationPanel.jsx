@@ -7,7 +7,7 @@ import {
   getRecommendationStats,
   generateAIRecommendationsWithLocation
 } from './recommendationManager'
-import { searchPlaces, isKakaoMapsReady } from './kakaoMapUtils'
+import { searchPlaces, isKakaoMapsReady, waitForKakaoMapsReady } from './kakaoMapUtils'
 import './RecommendationPanel.css'
 
 /**
@@ -77,9 +77,19 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
         throw new Error('위치 정보가 유효하지 않습니다.')
       }
 
+      // 카카오맵 준비 대기
+      try {
+        await waitForKakaoMapsReady()
+      } catch (error) {
+        console.warn('⚠️ 카카오맵 API 로드 실패:', error.message)
+        console.log('📌 기본 추천으로 진행합니다.')
+        generateRecommendations()
+        return
+      }
+
       // 카카오맵 준비 확인
       if (!isKakaoMapsReady()) {
-        console.warn('⚠️ 카카오맵 API가 준비되지 않았습니다.')
+        console.warn('⚠️ 카카오맵 API가 아직 준비되지 않았습니다.')
         console.log('📌 기본 추천으로 진행합니다.')
         generateRecommendations()
         return

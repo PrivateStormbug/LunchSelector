@@ -208,7 +208,8 @@ export const searchPlaces = (options) => {
         method: 'GET',
         mode: 'cors',
         headers: {
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': apiKey
         }
       })
 

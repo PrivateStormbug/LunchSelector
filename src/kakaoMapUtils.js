@@ -132,12 +132,12 @@ export const isKakaoMapsReady = () => {
 }
 
 /**
- * Kakao Maps 장소 검색 수행 (REST API 직접 호출)
+ * Kakao Maps 장소 검색 수행 (SDK Places 메서드 사용)
  * @param {object} options - 검색 옵션 { keyword, searchOptions }
  * @returns {Promise<Array>} 검색 결과
  */
 export const searchPlaces = (options) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     if (!options || !options.keyword) {
       const error = new Error('검색어(keyword)가 필요합니다.')
       logger.error('searchPlaces 파라미터 오류', error)
@@ -153,17 +153,18 @@ export const searchPlaces = (options) => {
         throw new Error('빈 검색어는 검색할 수 없습니다.')
       }
 
-      // API Key 가져오기
-      const apiKey = import.meta.env.VITE_KAKAO_MAP_API_KEY
-      if (!apiKey) {
-        throw new Error('Kakao Map API Key가 설정되지 않았습니다.')
+      // Kakao Maps SDK의 Places 서비스 사용
+      if (!window.kakao?.maps?.services?.Places) {
+        throw new Error('Kakao Maps Places 서비스가 준비되지 않았습니다.')
       }
 
-      // 검색 파라미터 구성
-      const params = new URLSearchParams()
-      params.append('query', keyword)
-      params.append('page', options.searchOptions?.page || 1)
-      params.append('size', options.searchOptions?.size || 15)
+      const ps = new window.kakao.maps.services.Places()
+
+      // 검색 옵션 구성
+      const searchOptions = {
+        page: options.searchOptions?.page || 1,
+        size: options.searchOptions?.size || 15
+      }
 
       // 좌표 기반 검색 설정
       if (options.searchOptions?.location && options.searchOptions?.radius) {
@@ -186,10 +187,9 @@ export const searchPlaces = (options) => {
           throw new Error('유효한 location 객체가 아닙니다.')
         }
 
-        // x: 경도(longitude), y: 위도(latitude)
-        params.append('x', lng.toFixed(7))
-        params.append('y', lat.toFixed(7))
-        params.append('radius', options.searchOptions.radius)
+        // 좌표 기반 검색 설정
+        searchOptions.location = new window.kakao.maps.LatLng(lat, lng)
+        searchOptions.radius = options.searchOptions.radius
 
         console.log(`[searchPlaces] 좌표 기반 검색: lat=${lat}, lng=${lng}, radius=${options.searchOptions.radius}`)
         logger.debug(`위치 기반 검색: 반경 ${options.searchOptions.radius}m`)
@@ -198,39 +198,36 @@ export const searchPlaces = (options) => {
         logger.debug(`키워드 기반 검색 수행`)
       }
 
-      // API 호출 (Authorization 헤더와 appkey 파라미터 함께 사용)
-      params.append('appkey', apiKey)
-      const url = `https://dapi.kakao.com/v2/local/search/keyword.json?${params.toString()}`
-      console.log('[searchPlaces] REST API 요청 URL:', url)
-      logger.debug(`카카오맵 REST API 호출: ${keyword}`)
+      console.log('[searchPlaces] 카카오맵 SDK Places.keywordSearch() 호출')
+      logger.debug(`카카오맵 SDK API 호출: ${keyword}`)
 
-      const response = await fetch(url, {
-        method: 'GET',
-        mode: 'cors',
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `KakaoAK ${apiKey}`
+      // 검색 콜백
+      const searchCallback = (data, status) => {
+        try {
+          if (status === window.kakao.maps.services.Status.OK) {
+            console.log(`✅ 검색 완료: ${data.length}개 결과`)
+            logger.info(`✅ 장소 검색 완료: ${data.length}개 결과`)
+            resolve(data)
+          } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
+            console.log('⚠️ 검색 결과 없음')
+            logger.warn('⚠️ 검색 결과 없음')
+            resolve([])
+          } else if (status === window.kakao.maps.services.Status.ERROR_RESPONSE) {
+            throw new Error('카카오맵 API 서버 오류 (ERROR_RESPONSE)')
+          } else if (status === window.kakao.maps.services.Status.INVALID_PARAMS) {
+            throw new Error('카카오맵 API 매개변수 오류 (INVALID_PARAMS)')
+          } else {
+            throw new Error(`장소 검색 실패: ${status}`)
+          }
+        } catch (callbackError) {
+          console.error('❌ 검색 콜백 처리 중 오류:', callbackError)
+          logger.error('❌ 검색 콜백 처리 중 오류 발생', callbackError)
+          reject(callbackError)
         }
-      })
-
-      console.log(`[searchPlaces] REST API 응답 상태: ${response.status}`)
-
-      if (!response.ok) {
-        const errorData = await response.text()
-        throw new Error(`Kakao API 오류 (${response.status}): ${errorData}`)
       }
 
-      const data = await response.json()
-
-      if (data.documents && Array.isArray(data.documents)) {
-        console.log(`✅ 검색 완료: ${data.documents.length}개 결과`)
-        logger.info(`✅ 장소 검색 완료: ${data.documents.length}개 결과`)
-        resolve(data.documents)
-      } else {
-        console.log('⚠️ 검색 결과 없음')
-        logger.warn('⚠️ 검색 결과 없음')
-        resolve([])
-      }
+      // 검색 실행
+      ps.keywordSearch(keyword, searchCallback, searchOptions)
     } catch (error) {
       console.error('❌ 카카오맵 검색 오류:', error)
       logger.error('❌ 카카오맵 검색 중 오류 발생', error)

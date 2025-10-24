@@ -25,23 +25,38 @@ export const waitForKakaoMapsReady = () => {
     const checkKakaoReady = () => {
       if (window.kakao && window.kakao.maps && window.kakao.maps.load) {
         const elapsed = performance.now() - startTime
+        console.log(`[waitForKakaoMapsReady] SDK 준비 완료: ${elapsed.toFixed(0)}ms`)
         logger.info(`Kakao Maps SDK 로드 완료 (${elapsed.toFixed(0)}ms)`)
-        
+
         // Kakao Maps 로드 함수 실행
+        console.log('[waitForKakaoMapsReady] window.kakao.maps.load() 호출 중...')
         window.kakao.maps.load(() => {
+          console.log('[waitForKakaoMapsReady] load() 콜백 실행됨')
+
           // Places 서비스가 완전히 준비될 때까지 대기
           let placesAttempts = 0
           const placesMaxAttempts = 50 // 5초 대기 (100ms * 50)
-          
+
           const checkPlacesReady = () => {
-            if (window.kakao?.maps?.services?.Places) {
+            const hasServices = window.kakao?.maps?.services
+            const hasPlaces = window.kakao?.maps?.services?.Places
+
+            console.log(`[waitForKakaoMapsReady] Places 확인 시도 ${placesAttempts + 1}/${placesMaxAttempts}:`, {
+              services: !!hasServices,
+              places: !!hasPlaces,
+              servicesKeys: hasServices ? Object.keys(hasServices) : 'N/A'
+            })
+
+            if (hasPlaces) {
               const totalElapsed = performance.now() - startTime
+              console.log(`[waitForKakaoMapsReady] ✅ Places 서비스 준비 완료: ${totalElapsed.toFixed(0)}ms`)
               logger.info(`✅ Kakao Maps Places 서비스 준비 완료 (${totalElapsed.toFixed(0)}ms)`)
               resolve()
             } else {
               placesAttempts++
               if (placesAttempts >= placesMaxAttempts) {
                 const totalElapsed = performance.now() - startTime
+                console.log(`[waitForKakaoMapsReady] ⚠️ Places 초기화 타임아웃 (${totalElapsed.toFixed(0)}ms) - 진행 계속`)
                 logger.warn(`⚠️ Places 서비스 초기화 지연 (${totalElapsed.toFixed(0)}ms)하지만 진행`)
                 resolve() // 타임아웃되어도 진행
                 return
@@ -49,16 +64,19 @@ export const waitForKakaoMapsReady = () => {
               setTimeout(checkPlacesReady, 100)
             }
           }
-          
+
           checkPlacesReady()
         })
       } else {
         attempts++
+        console.log(`[waitForKakaoMapsReady] SDK 미준비 시도 ${attempts}/${maxAttempts}`)
+
         if (attempts >= maxAttempts) {
           const elapsed = performance.now() - startTime
           const error = new Error(
             `Kakao Maps SDK 로드 실패 (${elapsed.toFixed(0)}ms 초과)`
           )
+          console.error(`[waitForKakaoMapsReady] ❌ SDK 로드 실패: ${error.message}`)
           logger.error('Kakao Maps SDK 로드 실패', error)
           reject(error)
           return
@@ -84,12 +102,33 @@ export const waitForKakaoMapsReady = () => {
  * @returns {boolean} 준비 여부
  */
 export const isKakaoMapsReady = () => {
-  return (
-    window.kakao &&
-    window.kakao.maps &&
-    window.kakao.maps.services &&
-    window.kakao.maps.services.Places
-  )
+  // 각 단계별 상세 로깅
+  const hasWindow = !!window.kakao
+  const hasMaps = hasWindow && !!window.kakao.maps
+  const hasServices = hasMaps && !!window.kakao.maps.services
+  const hasPlaces = hasServices && !!window.kakao.maps.services.Places
+
+  console.log('[isKakaoMapsReady] 디버깅 정보:')
+  console.log('  - window.kakao:', hasWindow, window.kakao ? '✓' : '✗')
+  console.log('  - window.kakao.maps:', hasMaps, hasMaps ? '✓' : '✗')
+  console.log('  - window.kakao.maps.services:', hasServices, hasServices ? '✓' : '✗')
+  console.log('  - window.kakao.maps.services.Places:', hasPlaces, hasPlaces ? '✓' : '✗')
+
+  // 각 객체의 상세 정보 출력
+  if (hasWindow) {
+    console.log('  - window.kakao 객체 키:', Object.keys(window.kakao))
+  }
+  if (hasMaps) {
+    console.log('  - window.kakao.maps 객체 키:', Object.keys(window.kakao.maps))
+  }
+  if (hasServices) {
+    console.log('  - window.kakao.maps.services 객체 키:', Object.keys(window.kakao.maps.services))
+  }
+
+  const isReady = hasWindow && hasMaps && hasServices && hasPlaces
+  console.log('[isKakaoMapsReady] 최종 결과:', isReady ? '준비됨 ✓' : '미준비 ✗')
+
+  return isReady
 }
 
 /**

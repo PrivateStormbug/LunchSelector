@@ -49,6 +49,18 @@
   font-weight: 700;
 }
 
+/* 현재 위치 정보 */
+.location-info {
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+  font-size: 0.85rem;
+  color: #333;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
 .panel-close-btn {
   background: rgba(255, 255, 255, 0.2);
   color: white;
@@ -738,4 +750,120 @@ html.dark-mode .feedback-question {
 
 html.dark-mode .feedback-section {
   border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Nearby Restaurants Tab */
+.nearby-tab {
+  padding: 1rem;
+}
+
+.nearby-info {
+  background: rgba(102, 204, 153, 0.1);
+  border: 1px solid rgba(102, 204, 153, 0.3);
+  border-radius: 0.75rem;
+  padding: 0.875rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: #2d5f4f;
+  font-weight: 600;
+  text-align: center;
+}
+
+.nearby-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.nearby-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.nearby-item:hover {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+  transform: translateX(2px);
+}
+
+.nearby-ranking {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  background: linear-gradient(135deg, #ff9b7b 0%, #ff8c69 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.nearby-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.nearby-name {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2d2d2d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nearby-address {
+  margin: 0.25rem 0;
+  font-size: 0.75rem;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.nearby-distance {
+  margin: 0.25rem 0;
+  font-size: 0.75rem;
+  color: #ff9b7b;
+  font-weight: 600;
+}
+
+.nearby-phone {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+html.dark-mode .nearby-info {
+  background: rgba(102, 204, 153, 0.15);
+  border-color: rgba(102, 204, 153, 0.2);
+  color: #7dd3c0;
+}
+
+html.dark-mode .nearby-item {
+  background: rgba(60, 60, 60, 0.8);
+  border-color: rgba(255, 155, 123, 0.15);
+}
+
+html.dark-mode .nearby-item:hover {
+  background: rgba(70, 70, 70, 0.9);
+}
+
+html.dark-mode .nearby-name {
+  color: #e0e0e0;
+}
+
+html.dark-mode .nearby-address,
+html.dark-mode .nearby-phone {
+  color: #a0a0a0;
 }

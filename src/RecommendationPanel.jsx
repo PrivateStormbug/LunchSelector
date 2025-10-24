@@ -44,27 +44,46 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
    * 현재 위치 정보 가져오기
    */
   const getCurrentLocation = () => {
+    console.log('🔐 [getCurrentLocation] Geolocation 권한 요청 시작...')
     if (navigator.geolocation) {
+      console.log('✅ [getCurrentLocation] Geolocation API 지원')
       navigator.geolocation.getCurrentPosition(
         async (position) => {
-          const { latitude, longitude } = position.coords
-          console.log('📍 현재 위치 획득 성공:', { latitude, longitude })
+          const { latitude, longitude, accuracy, altitude, altitudeAccuracy } = position.coords
+          console.log('📍 [getCurrentLocation] 현재 위치 획득 성공')
+          console.log(`   좌표: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`)
+          console.log(`   정확도: ±${Math.round(accuracy)}m`)
+          if (altitude !== null) console.log(`   고도: ${Math.round(altitude)}m`)
           setCurrentLocation({ latitude, longitude })
 
           // 현재 위치에서 음식점 검색
           await searchNearbyRestaurants(latitude, longitude)
         },
         (error) => {
-          console.warn('⚠️ 위치 정보를 가져올 수 없습니다:', error.message)
+          console.warn('❌ [getCurrentLocation] 위치 정보 오류')
+          console.warn(`   에러 코드: ${error.code}`)
+          console.warn(`   에러 메시지: ${error.message}`)
+
+          // 에러 코드별 설명
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              console.warn('   원인: 사용자가 위치 공유 권한을 거부했습니다')
+              console.warn('   해결: 브라우저 설정 > 위치 > 허용으로 변경하세요')
+              break
+            case error.POSITION_UNAVAILABLE:
+              console.warn('   원인: GPS 신호를 수신할 수 없습니다')
+              break
+            case error.TIMEOUT:
+              console.warn('   원인: 위치 조회 시간이 초과되었습니다')
+              break
+          }
           console.log('📌 기본 추천으로 진행합니다.')
-          // 위치 정보 없이 기본 추천 실행
           generateRecommendations()
         }
       )
     } else {
-      console.warn('⚠️ Geolocation API를 지원하지 않습니다')
+      console.warn('❌ [getCurrentLocation] Geolocation API를 지원하지 않습니다')
       console.log('📌 기본 추천으로 진행합니다.')
-      // 위치 정보 없이 기본 추천 실행
       generateRecommendations()
     }
   }
@@ -159,12 +178,25 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
                 console.log(`✅ 최종 수집: ${resultsArray.length}개`)
 
                 if (resultsArray.length > 0) {
-                  // 모든 데이터에 거리 계산
+                  // 모든 데이터에 거리 계산 (Haversine 공식 - 정확한 지구 거리)
                   const allWithDistance = resultsArray.map(place => {
-                    const distance = Math.hypot(
-                      parseFloat(place.x) - longitude,
-                      parseFloat(place.y) - latitude
-                    ) * 111000; // 좌표 단위를 미터로 변환 (대략값)
+                    const placeX = parseFloat(place.x)  // 경도
+                    const placeY = parseFloat(place.y)  // 위도
+
+                    // Haversine 공식: 정확한 지구 거리 계산
+                    const R = 6371000; // 지구 반지름 (미터)
+                    const phi1 = (latitude * Math.PI) / 180
+                    const phi2 = (placeY * Math.PI) / 180
+                    const deltaLat = ((placeY - latitude) * Math.PI) / 180
+                    const deltaLng = ((placeX - longitude) * Math.PI) / 180
+
+                    const a =
+                      Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                      Math.cos(phi1) * Math.cos(phi2) *
+                      Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2)
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+                    const distance = R * c; // 미터 단위
+
                     return { ...place, distance }
                   }).sort((a, b) => a.distance - b.distance)
 
@@ -382,6 +414,13 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
           ✕
         </button>
       </div>
+
+      {/* 현재 위치 정보 표시 */}
+      {currentLocation && (
+        <div className="location-info">
+          📍 현재 위치: {currentLocation.latitude.toFixed(6)}, {currentLocation.longitude.toFixed(6)}
+        </div>
+      )}
 
       <div className="panel-tabs">
         <button

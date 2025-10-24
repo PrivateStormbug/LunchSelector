@@ -115,71 +115,162 @@ export function useKakaoMap({ selectedMenu, currentLocation, shouldShowMap }) {
         // 장소 검색 객체 생성
         const ps = new window.kakao.maps.services.Places()
 
-        // 키워드로 장소 검색
-        const searchOptions = {
-          location: new window.kakao.maps.LatLng(latitude, longitude),
-          radius: APP_CONFIG.performance.searchRadius || 1000,
-          size: 20
-          // sort 파라미터 제거 - API 호환성 문제로 인해 정렬은 기본값 사용
-        }
-
         const searchKeyword = getBaseMenu(selectedMenu)
         logger.debug(`음식점 검색: ${searchKeyword}`)
-        logger.debug(`검색 옵션: 반경 ${searchOptions.radius}m, 위치: ${latitude}, ${longitude}`)
+        logger.debug(`검색 위치: ${latitude}, ${longitude}`)
+
+        // 거리 확장 레벨: [1km, 2km, 3km, 5km, 10km, 15km, 20km, 30km]
+        const RADIUS_LEVELS = [1000, 2000, 3000, 5000, 10000, 15000, 20000, 30000];
+
+        // 다양한 음식 관련 키워드로 검색 (메인 키워드 + 보조 키워드)
+        const searchKeywords = [searchKeyword, '식당', '카페', '커피숍']
+        const allResults = {}  // 중복 제거용 객체 (ID 기반)
+
+        let completedSearches = 0
+        let totalSearches = searchKeywords.length
+
+        // ✅ Kakao Maps JS SDK의 keywordSearch() 사용 (멀티키워드)
+        // 주의: searchOptions는 지원되지 않음 (HTTP 400 에러 발생)
+        console.log(`[useKakaoMap] keywordSearch 호출: keyword="${searchKeyword}"`)
+        console.log(`   → 다양한 키워드로 검색하여 모든 결과 수집 후 클라이언트에서 거리순 정렬`)
+        console.log(`   → 검색 키워드: ${searchKeywords.join(', ')}`)
 
         // 검색 콜백 함수
         const searchCallback = (data, status) => {
           try {
             if (status === window.kakao.maps.services.Status.OK) {
-              setSearchResults(data)
-              logger.info(`검색 결과: ${data.length}개 식당 발견`)
-
-              // 기존 마커 제거
-              cleanupMarkers(markersRef.current.map((_, idx) => `marker_${idx}`))
-              markersRef.current = []
-
-              // 검색 결과에 마커 표시
-              const markerPool = getMarkerPool()
-              if (markerPool) {
-                const onMarkerClickHandler = (place) => {
-                  selectPlace(place)
-                }
-                const newMarkers = createMarkersFromPlaces(
-                  data,
-                  map,
-                  onMarkerClickHandler,
-                  markerPool
-                )
-                markersRef.current = newMarkers
-
-                // 첫 번째 검색 결과로 중심 이동
-                if (data.length > 0) {
-                  map.setCenter(new window.kakao.maps.LatLng(data[0].y, data[0].x))
-                  setSelectedPlace(data[0])
-                }
-              } else {
-                logger.warn('마커 풀 초기화 실패, 기본 마커 생성 선택')
-                // Fallback: 기본 마커 생성
-                const newMarkers = data.map((place) => {
-                  const placePosition = new window.kakao.maps.LatLng(place.y, place.x)
-                  const placeMarker = new window.kakao.maps.Marker({
-                    position: placePosition,
-                    map: map
-                  })
-                  window.kakao.maps.event.addListener(placeMarker, 'click', () => {
-                    selectPlace(place)
-                  })
-                  return placeMarker
+              // 중복 제거하면서 모든 결과 수집
+              if (data && data.length > 0) {
+                data.forEach(place => {
+                  if (!allResults[place.id]) {
+                    allResults[place.id] = place
+                  }
                 })
-                markersRef.current = newMarkers
+              }
+
+              completedSearches++
+              logger.debug(`[useKakaoMap] 검색 진행: ${completedSearches}/${totalSearches}`)
+
+              // 모든 검색이 완료되면 결과 처리
+              if (completedSearches === totalSearches) {
+                const resultsArray = Object.values(allResults)
+                logger.debug(`[useKakaoMap] 최종 수집: ${resultsArray.length}개`)
+
+                if (resultsArray.length > 0) {
+                  // 디버깅: 사용자 위치 정보
+                  logger.debug(`🔍 [거리 계산 디버깅]`)
+                  logger.debug(`   사용자 좌표: lat=${latitude.toFixed(6)}, lng=${longitude.toFixed(6)}`)
+
+                  // 모든 데이터에 거리 계산 (Haversine 공식)
+                  const allWithDistance = resultsArray.map((place, idx) => {
+                    const placeX = parseFloat(place.x)
+                    const placeY = parseFloat(place.y)
+
+                    // 처음 2개만 상세 로깅
+                    if (idx < 2) {
+                      logger.debug(`   장소 #${idx+1}: ${place.place_name}`)
+                      logger.debug(`     place.x=${placeX.toFixed(6)}, place.y=${placeY.toFixed(6)}`)
+                    }
+
+                    // Haversine 공식: 더 정확한 지구 거리 계산
+                    const R = 6371000; // 지구 반지름 (미터)
+                    const phi1 = (latitude * Math.PI) / 180
+                    const phi2 = (placeY * Math.PI) / 180
+                    const deltaLat = ((placeY - latitude) * Math.PI) / 180
+                    const deltaLng = ((placeX - longitude) * Math.PI) / 180
+
+                    const a =
+                      Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                      Math.cos(phi1) * Math.cos(phi2) *
+                      Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2)
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+                    const distance = R * c; // 미터 단위
+
+                    if (idx < 2) {
+                      logger.debug(`     Δlat=${deltaLat.toFixed(6)} rad, Δlng=${deltaLng.toFixed(6)} rad`)
+                      logger.debug(`     계산된 거리: ${Math.round(distance)}m`)
+                    }
+
+                    return { ...place, distance }
+                  }).sort((a, b) => a.distance - b.distance)
+
+                  logger.debug(`📊 거리 계산 완료 - 최소: ${Math.round(allWithDistance[0]?.distance || 0)}m, 최대: ${Math.round(allWithDistance[allWithDistance.length-1]?.distance || 0)}m`)
+                  logger.debug(`   상위 5개: ${allWithDistance.slice(0, 5).map((p, i) => `${i+1}.${p.place_name}(${Math.round(p.distance)}m)`).join(', ')}`)
+
+                  // 점진적 거리 확장: 각 레벨에서 검색하여 첫 결과 반환
+                  let dataWithDistance = [];
+                  let actualRadius = 0;
+
+                  for (const radius of RADIUS_LEVELS) {
+                    const filtered = allWithDistance.filter(place => place.distance <= radius)
+                    if (filtered.length > 0) {
+                      dataWithDistance = filtered
+                      actualRadius = radius / 1000; // 미터를 km로 변환
+                      logger.debug(`✨ ${actualRadius}km 반경에서 ${filtered.length}개 식당 발견!`)
+                      break;
+                    } else {
+                      logger.debug(`⚠️ ${radius / 1000}km 반경 내 식당 없음, 다음 거리 시도...`)
+                    }
+                  }
+
+                  logger.info(`검색 결과: ${dataWithDistance.length}개 식당 발견 (${actualRadius}km 반경, 거리순 정렬)`)
+                  logger.debug(`가장 가까운 식당: ${dataWithDistance[0]?.place_name} (${Math.round(dataWithDistance[0]?.distance || 0)}m)`)
+                  logger.debug(`전체 검색 결과: ${resultsArray.length}개 → 필터링 결과: ${dataWithDistance.length}개`)
+                  logger.debug(`📍 현재 위치 기반 검색 (${actualRadius}km 반경)`)
+
+                  setSearchResults(dataWithDistance)
+
+                  // 기존 마커 제거
+                  cleanupMarkers(markersRef.current.map((_, idx) => `marker_${idx}`))
+                  markersRef.current = []
+
+                  // 검색 결과에 마커 표시 (필터링된 결과만 사용)
+                  const markerPool = getMarkerPool()
+                  if (markerPool) {
+                    const onMarkerClickHandler = (place) => {
+                      selectPlace(place)
+                    }
+                    const newMarkers = createMarkersFromPlaces(
+                      dataWithDistance,
+                      map,
+                      onMarkerClickHandler,
+                      markerPool
+                    )
+                    markersRef.current = newMarkers
+
+                    // 필터링된 가장 가까운 검색 결과로 중심 이동
+                    if (dataWithDistance.length > 0) {
+                      map.setCenter(new window.kakao.maps.LatLng(dataWithDistance[0].y, dataWithDistance[0].x))
+                      setSelectedPlace(dataWithDistance[0])
+                    }
+                  } else {
+                    logger.warn('마커 풀 초기화 실패, 기본 마커 생성 선택')
+                    // Fallback: 기본 마커 생성 (필터링된 결과만 사용)
+                    const newMarkers = dataWithDistance.map((place) => {
+                      const placePosition = new window.kakao.maps.LatLng(place.y, place.x)
+                      const placeMarker = new window.kakao.maps.Marker({
+                        position: placePosition,
+                        map: map
+                      })
+                      window.kakao.maps.event.addListener(placeMarker, 'click', () => {
+                        selectPlace(place)
+                      })
+                      return placeMarker
+                    })
+                    markersRef.current = newMarkers
+                  }
+                }
               }
               setIsLoadingMap(false)
               perfMonitor.end('mapInitialization')
             } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
-              setSearchResults([])
-              logger.warn('검색 결과 없음')
-              setIsLoadingMap(false)
-              perfMonitor.end('mapInitialization')
+              completedSearches++
+              if (completedSearches === totalSearches) {
+                setSearchResults([])
+                logger.warn('검색 결과 없음')
+                setIsLoadingMap(false)
+                perfMonitor.end('mapInitialization')
+              }
             } else if (status === window.kakao.maps.services.Status.ERROR_RESPONSE) {
               logger.error('카카오맵 API 서버 오류 (ERROR_RESPONSE)')
               setIsLoadingMap(false)
@@ -200,8 +291,10 @@ export function useKakaoMap({ selectedMenu, currentLocation, shouldShowMap }) {
           }
         }
 
-        // 검색 실행
-        ps.keywordSearch(searchKeyword, searchCallback, searchOptions)
+        // 각 키워드별로 검색 실행
+        searchKeywords.forEach((keyword) => {
+          ps.keywordSearch(keyword, searchCallback)
+        })
       } catch (error) {
         logger.error('지도 초기화 오류', error)
         setIsLoadingMap(false)

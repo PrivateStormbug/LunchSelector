@@ -171,13 +171,42 @@ export const searchPlaces = (options) => {
       console.log('  - keyword:', keyword)
       console.log('  - size:', searchOptions.size)
 
-      // location 설정은 radius와 함께만 사용하고 단독으로는 사용하지 않음
-      // (LatLng 객체 직렬화 문제 회피)
+      // location 설정: LatLng 객체를 올바르게 처리
+      // LatLng 객체 {La: lng, Ma: lat} → location으로 전달
       if (options.searchOptions?.location && options.searchOptions?.radius) {
-        searchOptions.location = options.searchOptions.location
+        const locObj = options.searchOptions.location
+
+        // LatLng 객체인지 확인하고 좌표 추출
+        let lat, lng
+        if (locObj.getLat && locObj.getLng) {
+          // LatLng 객체의 메서드 사용
+          lat = locObj.getLat()
+          lng = locObj.getLng()
+          console.log('[searchPlaces] LatLng 메서드로 좌표 추출')
+        } else if (locObj.Ma !== undefined && locObj.La !== undefined) {
+          // LatLng 객체의 속성 사용 (Ma=lat, La=lng)
+          lat = locObj.Ma
+          lng = locObj.La
+          console.log('[searchPlaces] LatLng 속성으로 좌표 추출')
+        } else if (locObj.lat !== undefined && locObj.lng !== undefined) {
+          // 일반 좌표 객체
+          lat = locObj.lat
+          lng = locObj.lng
+          console.log('[searchPlaces] 일반 좌표 객체 사용')
+        } else {
+          throw new Error('유효한 location 객체가 아닙니다.')
+        }
+
+        console.log(`[searchPlaces] 추출된 좌표: lat=${lat}, lng=${lng}`)
+
+        // LatLng 객체를 다시 생성해서 전달 (올바른 형식)
+        // 또는 직접 좌표 전달
+        searchOptions.location = new window.kakao.maps.LatLng(lat, lng)
         searchOptions.radius = Number(options.searchOptions.radius)
+
         console.log('  - location: 설정됨 (반경 기반 검색)')
         console.log('  - radius:', searchOptions.radius + 'm')
+        console.log(`  - 실제 좌표: ${lat}, ${lng}`)
         logger.debug(`위치 기반 검색: 반경 ${searchOptions.radius}m`)
       } else {
         console.log('  - location: 설정 안 함 (일반 키워드 검색)')
@@ -191,7 +220,13 @@ export const searchPlaces = (options) => {
       }
 
       logger.debug(`카카오맵 검색 시작: "${keyword}"`)
-      console.log('[searchPlaces] searchOptions:', JSON.stringify(searchOptions, null, 2))
+      logger.debug(`searchOptions 설정 완료`, {
+        keyword,
+        page: searchOptions.page,
+        size: searchOptions.size,
+        radius: searchOptions.radius,
+        hasLocation: !!searchOptions.location
+      })
 
       // 콜백 함수 정의
       const callback = (data, status) => {

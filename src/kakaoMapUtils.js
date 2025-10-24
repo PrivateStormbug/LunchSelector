@@ -207,7 +207,8 @@ export const searchPlaces = (options) => {
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Authorization': `KakaoAK ${apiKey}`
         }
       })
 

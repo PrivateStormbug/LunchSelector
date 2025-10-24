@@ -178,8 +178,17 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
                 console.log(`✅ 최종 수집: ${resultsArray.length}개`)
 
                 if (resultsArray.length > 0) {
+                  // 🔍 첫 번째 항목 상세 디버깅
+                  const firstPlace = resultsArray[0]
+                  console.log('🔍 [첫 번째 검색 결과 상세 분석]')
+                  console.log(`   place_name: ${firstPlace.place_name}`)
+                  console.log(`   place.x: ${firstPlace.x}`)
+                  console.log(`   place.y: ${firstPlace.y}`)
+                  console.log(`   사용자 경도: ${longitude}`)
+                  console.log(`   사용자 위도: ${latitude}`)
+
                   // 모든 데이터에 거리 계산 (Haversine 공식 - 정확한 지구 거리)
-                  const allWithDistance = resultsArray.map(place => {
+                  const allWithDistance = resultsArray.map((place, idx) => {
                     const placeX = parseFloat(place.x)  // 경도
                     const placeY = parseFloat(place.y)  // 위도
 
@@ -196,6 +205,15 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
                       Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2)
                     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
                     const distance = R * c; // 미터 단위
+
+                    // 첫 번째 항목만 상세 계산 과정 출력
+                    if (idx === 0) {
+                      console.log(`   ΔLat (라디안): ${deltaLat}`)
+                      console.log(`   ΔLng (라디안): ${deltaLng}`)
+                      console.log(`   a 값: ${a}`)
+                      console.log(`   c 값: ${c}`)
+                      console.log(`   최종 거리: ${distance}m`)
+                    }
 
                     return { ...place, distance }
                   }).sort((a, b) => a.distance - b.distance)
@@ -215,28 +233,41 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
                     console.log(`    ${i+1}. ${p.place_name} - ${Math.round(p.distance)}m`)
                   })
 
-                  // 점진적 거리 확장: 각 레벨에서 검색하여 첫 결과 반환
+                  // 점진적 거리 확장: 각 반경에서 최소 5개 이상 찾을 때까지 확대
+                  const MIN_RESTAURANTS = 5;  // 최소 표시 음식점 개수
                   let foundRestaurants = [];
                   let actualRadius = 0;
+                  let selectedRadiusLevel = 0;
 
                   for (const radius of RADIUS_LEVELS) {
                     const filtered = allWithDistance.filter(place => place.distance <= radius)
-                    if (filtered.length > 0) {
-                      foundRestaurants = filtered
-                      actualRadius = radius / 1000; // 미터를 km로 변환
-                      console.log(`✨ ${actualRadius}km 반경에서 ${filtered.length}개 음식점 발견!`)
-                      console.log('검색된 음식점 (거리순):', filtered.slice(0, 3).map(p => ({
+                    console.log(`🔍 ${radius / 1000}km 반경: ${filtered.length}개 음식점`)
+
+                    if (filtered.length >= MIN_RESTAURANTS) {
+                      // 최소 5개 이상 발견하면 상위 5개만 선택
+                      foundRestaurants = filtered.slice(0, MIN_RESTAURANTS)
+                      actualRadius = radius / 1000
+                      selectedRadiusLevel = radius
+                      console.log(`✨ ${actualRadius}km 반경에서 ${filtered.length}개 중 상위 ${MIN_RESTAURANTS}개 선택!`)
+                      console.log('검색된 음식점 (거리순):', foundRestaurants.map(p => ({
                         name: p.place_name,
                         distance: `${Math.round(p.distance)}m (${(p.distance / 1000).toFixed(2)}km)`
                       })))
                       break;
-                    } else {
-                      console.log(`⚠️ ${radius / 1000}km 반경 내 음식점 없음, 다음 거리 시도...`)
                     }
                   }
 
+                  // 마지막 반경까지 갔는데도 MIN_RESTAURANTS개 미만이면, 거리순 상위 MIN_RESTAURANTS개 반환
                   if (foundRestaurants.length === 0) {
-                    console.log('⚠️ 30km 반경 내에도 음식점이 없습니다.')
+                    foundRestaurants = allWithDistance.slice(0, Math.min(MIN_RESTAURANTS, allWithDistance.length))
+                    actualRadius = foundRestaurants.length > 0
+                      ? (foundRestaurants[foundRestaurants.length - 1].distance / 1000).toFixed(2)
+                      : 0
+                    console.log(`📍 조건을 만족하는 반경이 없음 → 거리순 상위 ${foundRestaurants.length}개 선택`)
+                    console.log('검색된 음식점 (거리순):', foundRestaurants.map(p => ({
+                      name: p.place_name,
+                      distance: `${Math.round(p.distance)}m (${(p.distance / 1000).toFixed(2)}km)`
+                    })))
                   } else {
                     console.log(`🎯 최종 결과: ${actualRadius}km 반경에서 ${foundRestaurants.length}개 음식점 선택`)
                   }

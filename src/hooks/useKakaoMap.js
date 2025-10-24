@@ -197,20 +197,31 @@ export function useKakaoMap({ selectedMenu, currentLocation, shouldShowMap }) {
                   logger.debug(`📊 거리 계산 완료 - 최소: ${Math.round(allWithDistance[0]?.distance || 0)}m, 최대: ${Math.round(allWithDistance[allWithDistance.length-1]?.distance || 0)}m`)
                   logger.debug(`   상위 5개: ${allWithDistance.slice(0, 5).map((p, i) => `${i+1}.${p.place_name}(${Math.round(p.distance)}m)`).join(', ')}`)
 
-                  // 점진적 거리 확장: 각 레벨에서 검색하여 첫 결과 반환
+                  // 점진적 거리 확장: 각 반경에서 최소 5개 이상 찾을 때까지 확대
+                  const MIN_RESTAURANTS = 5;  // 최소 표시 음식점 개수
                   let dataWithDistance = [];
                   let actualRadius = 0;
 
                   for (const radius of RADIUS_LEVELS) {
                     const filtered = allWithDistance.filter(place => place.distance <= radius)
-                    if (filtered.length > 0) {
-                      dataWithDistance = filtered
-                      actualRadius = radius / 1000; // 미터를 km로 변환
-                      logger.debug(`✨ ${actualRadius}km 반경에서 ${filtered.length}개 식당 발견!`)
+                    logger.debug(`🔍 ${radius / 1000}km 반경: ${filtered.length}개 식당`)
+
+                    if (filtered.length >= MIN_RESTAURANTS) {
+                      // 최소 5개 이상 발견하면 상위 5개만 선택
+                      dataWithDistance = filtered.slice(0, MIN_RESTAURANTS)
+                      actualRadius = radius / 1000
+                      logger.debug(`✨ ${actualRadius}km 반경에서 ${filtered.length}개 중 상위 ${MIN_RESTAURANTS}개 선택!`)
                       break;
-                    } else {
-                      logger.debug(`⚠️ ${radius / 1000}km 반경 내 식당 없음, 다음 거리 시도...`)
                     }
+                  }
+
+                  // 마지막 반경까지 갔는데도 MIN_RESTAURANTS개 미만이면, 거리순 상위 MIN_RESTAURANTS개 반환
+                  if (dataWithDistance.length === 0) {
+                    dataWithDistance = allWithDistance.slice(0, Math.min(MIN_RESTAURANTS, allWithDistance.length))
+                    actualRadius = dataWithDistance.length > 0
+                      ? (dataWithDistance[dataWithDistance.length - 1].distance / 1000).toFixed(2)
+                      : 0
+                    logger.debug(`📍 조건을 만족하는 반경이 없음 → 거리순 상위 ${dataWithDistance.length}개 선택`)
                   }
 
                   logger.info(`검색 결과: ${dataWithDistance.length}개 식당 발견 (${actualRadius}km 반경, 거리순 정렬)`)

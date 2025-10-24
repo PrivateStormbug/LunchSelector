@@ -22,6 +22,7 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
   const [isLoading, setIsLoading] = useState(false)
   const [currentLocation, setCurrentLocation] = useState(null)
   const [nearbyRestaurants, setNearbyRestaurants] = useState([])
+  const [isSearchingNearby, setIsSearchingNearby] = useState(false)
 
   // 추천 생성
   useEffect(() => {
@@ -71,6 +72,13 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
    * 현재 위치 근처 음식점 검색
    */
   const searchNearbyRestaurants = async (latitude, longitude) => {
+    // 중복 요청 방지
+    if (isSearchingNearby) {
+      console.log('🔄 이미 검색 중입니다. 중복 요청 무시')
+      return
+    }
+
+    setIsSearchingNearby(true)
     try {
       // 입력값 검증
       if (typeof latitude !== 'number' || typeof longitude !== 'number') {
@@ -134,6 +142,8 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
       // 음식점 검색 실패 시 기본 추천 실행
       setNearbyRestaurants([])
       generateRecommendations()
+    } finally {
+      setIsSearchingNearby(false)
     }
   }
 

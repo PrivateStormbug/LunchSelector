@@ -133,6 +133,7 @@ export const isKakaoMapsReady = () => {
 
 /**
  * Kakao Maps 장소 검색 수행 (SDK Places 메서드 사용)
+ * useKakaoMap.js와 동일한 방식으로 구현
  * @param {object} options - 검색 옵션 { keyword, searchOptions }
  * @returns {Promise<Array>} 검색 결과
  */
@@ -160,50 +161,32 @@ export const searchPlaces = (options) => {
 
       const ps = new window.kakao.maps.services.Places()
 
-      // 검색 옵션 구성
+      // 검색 옵션 구성 (useKakaoMap.js와 동일한 방식)
       const searchOptions = {
-        page: options.searchOptions?.page || 1,
         size: options.searchOptions?.size || 15
       }
 
       // 좌표 기반 검색 설정
       if (options.searchOptions?.location && options.searchOptions?.radius) {
-        const locObj = options.searchOptions.location
-
-        // LatLng 객체에서 좌표 추출
-        let lat, lng
-        if (locObj.getLat && locObj.getLng) {
-          lat = locObj.getLat()
-          lng = locObj.getLng()
-          console.log('[searchPlaces] LatLng 메서드로 좌표 추출')
-        } else if (locObj.Ma !== undefined && locObj.La !== undefined) {
-          lat = locObj.Ma
-          lng = locObj.La
-          console.log('[searchPlaces] LatLng 속성으로 좌표 추출')
-        } else if (locObj.lat !== undefined && locObj.lng !== undefined) {
-          lat = locObj.lat
-          lng = locObj.lng
-        } else {
-          throw new Error('유효한 location 객체가 아닙니다.')
-        }
-
-        // 좌표 기반 검색 설정
-        searchOptions.location = new window.kakao.maps.LatLng(lat, lng)
+        searchOptions.location = options.searchOptions.location
         searchOptions.radius = options.searchOptions.radius
 
-        console.log(`[searchPlaces] 좌표 기반 검색: lat=${lat}, lng=${lng}, radius=${options.searchOptions.radius}`)
-        logger.debug(`위치 기반 검색: 반경 ${options.searchOptions.radius}m`)
+        console.log(`[searchPlaces] 좌표 기반 검색 설정: radius=${searchOptions.radius}m`)
+        logger.debug(`위치 기반 검색: 반경 ${searchOptions.radius}m`)
       } else {
         console.log('[searchPlaces] 키워드 기반 검색')
         logger.debug(`키워드 기반 검색 수행`)
       }
 
       console.log('[searchPlaces] 카카오맵 SDK Places.keywordSearch() 호출')
+      console.log('[searchPlaces] 검색 옵션:', searchOptions)
       logger.debug(`카카오맵 SDK API 호출: ${keyword}`)
 
       // 검색 콜백
       const searchCallback = (data, status) => {
         try {
+          console.log(`[searchPlaces] 검색 콜백 - status: ${status}, data: ${Array.isArray(data) ? data.length + '개' : 'null'}`)
+          
           if (status === window.kakao.maps.services.Status.OK) {
             console.log(`✅ 검색 완료: ${data.length}개 결과`)
             logger.info(`✅ 장소 검색 완료: ${data.length}개 결과`)

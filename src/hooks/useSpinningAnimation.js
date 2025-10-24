@@ -53,6 +53,7 @@ export function useSpinningAnimation({ menuData, categories, selectedCategory })
 
   /**
    * 완전 랜덤 메뉴 추천 (카테고리와 메뉴 모두 랜덤)
+   * 항상 전체 카테고리에서 선택
    * @returns {Object|null} { category, menu } 또는 null
    */
   const getRandomMenu = useCallback(() => {
@@ -64,6 +65,7 @@ export function useSpinningAnimation({ menuData, categories, selectedCategory })
 
   /**
    * 스피닝 시작 및 실행
+   * 항상 전체 카테고리에서 랜덤 추천 (selectedCategory와 무관)
    * @returns {Promise<Object>} 최종 메뉴 { category, menu }
    */
   const startSpinning = useCallback(() => {
@@ -71,14 +73,11 @@ export function useSpinningAnimation({ menuData, categories, selectedCategory })
     setIsSpinning(true)
 
     return new Promise((resolve) => {
-      // 스피닝 효과: 100ms마다 다른 메뉴 표시
+      // 스피닝 효과: 100ms마다 다른 메뉴 표시 (전체 카테고리에서 랜덤)
       spinIntervalRef.current = setInterval(() => {
-        if (selectedCategory && selectedCategory !== '뽑는 중...') {
-          const menu = getRandomMenuFromCategory(selectedCategory)
-          setSpinningMenu(menu)
-        } else {
-          const { menu } = getRandomMenu() || { menu: null }
-          setSpinningMenu(menu)
+        const result = getRandomMenu()
+        if (result && result.menu) {
+          setSpinningMenu(result.menu)
         }
       }, APP_CONFIG.performance.spinInterval)
 
@@ -86,15 +85,10 @@ export function useSpinningAnimation({ menuData, categories, selectedCategory })
       spinTimeoutRef.current = setTimeout(() => {
         clearInterval(spinIntervalRef.current)
         
-        let category, menu
-        if (selectedCategory && selectedCategory !== '뽑는 중...') {
-          category = selectedCategory
-          menu = getRandomMenuFromCategory(selectedCategory)
-        } else {
-          const result = getRandomMenu()
-          category = result.category
-          menu = result.menu
-        }
+        // 항상 전체 카테고리에서 랜덤 선택
+        const result = getRandomMenu()
+        const category = result?.category
+        const menu = result?.menu
 
         setIsSpinning(false)
         setSpinningMenu(null)
@@ -111,7 +105,7 @@ export function useSpinningAnimation({ menuData, categories, selectedCategory })
         resolve({ category, menu })
       }, APP_CONFIG.performance.spinDuration)
     })
-  }, [selectedCategory, getRandomMenuFromCategory, getRandomMenu])
+  }, [getRandomMenu])
 
   /**
    * 컴포넌트 언마운트 시 interval 정리

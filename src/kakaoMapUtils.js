@@ -161,56 +161,38 @@ export const searchPlaces = (options) => {
 
       const ps = new window.kakao.maps.services.Places()
 
-      // 검색 옵션 구성 (useKakaoMap.js와 동일한 방식)
-      const searchOptions = {
-        size: options.searchOptions?.size || 15
-      }
+      // Do NOT use location/radius options - causes HTTP 400 errors
+      // Use client-side distance filtering instead (like useKakaoMap.js)
+      console.log('[searchPlaces] Kakao Maps Places.keywordSearch() called')
+      logger.debug(`Kakao Maps SDK API call: ${keyword}`)
 
-      // 좌표 기반 검색 설정
-      if (options.searchOptions?.location && options.searchOptions?.radius) {
-        searchOptions.location = options.searchOptions.location
-        searchOptions.radius = options.searchOptions.radius
-
-        console.log(`[searchPlaces] 좌표 기반 검색 설정: radius=${searchOptions.radius}m`)
-        logger.debug(`위치 기반 검색: 반경 ${searchOptions.radius}m`)
-      } else {
-        console.log('[searchPlaces] 키워드 기반 검색')
-        logger.debug(`키워드 기반 검색 수행`)
-      }
-
-      console.log('[searchPlaces] 카카오맵 SDK Places.keywordSearch() 호출')
-      console.log('[searchPlaces] 검색 옵션:', searchOptions)
-      logger.debug(`카카오맵 SDK API 호출: ${keyword}`)
-
-      // 검색 콜백
+      // Search callback
       const searchCallback = (data, status) => {
         try {
-          console.log(`[searchPlaces] 검색 콜백 - status: ${status}, data: ${Array.isArray(data) ? data.length + '개' : 'null'}`)
-          
           if (status === window.kakao.maps.services.Status.OK) {
-            console.log(`✅ 검색 완료: ${data.length}개 결과`)
-            logger.info(`✅ 장소 검색 완료: ${data.length}개 결과`)
+            console.log(`Search completed: ${data.length} results`)
+            logger.info(`Place search completed: ${data.length} results`)
             resolve(data)
           } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
-            console.log('⚠️ 검색 결과 없음')
-            logger.warn('⚠️ 검색 결과 없음')
+            console.log('No search results')
+            logger.warn('No search results')
             resolve([])
           } else if (status === window.kakao.maps.services.Status.ERROR_RESPONSE) {
-            throw new Error('카카오맵 API 서버 오류 (ERROR_RESPONSE)')
+            throw new Error('Kakao Maps API server error (ERROR_RESPONSE)')
           } else if (status === window.kakao.maps.services.Status.INVALID_PARAMS) {
-            throw new Error('카카오맵 API 매개변수 오류 (INVALID_PARAMS)')
+            throw new Error('Kakao Maps API parameter error (INVALID_PARAMS)')
           } else {
-            throw new Error(`장소 검색 실패: ${status}`)
+            throw new Error(`Place search failed: ${status}`)
           }
         } catch (callbackError) {
-          console.error('❌ 검색 콜백 처리 중 오류:', callbackError)
-          logger.error('❌ 검색 콜백 처리 중 오류 발생', callbackError)
+          console.error('Error in search callback:', callbackError)
+          logger.error('Error in search callback', callbackError)
           reject(callbackError)
         }
       }
 
-      // 검색 실행
-      ps.keywordSearch(keyword, searchCallback, searchOptions)
+      // Search execution - NO searchOptions (use client-side filtering instead)
+      ps.keywordSearch(keyword, searchCallback)
     } catch (error) {
       console.error('❌ 카카오맵 검색 오류:', error)
       logger.error('❌ 카카오맵 검색 중 오류 발생', error)

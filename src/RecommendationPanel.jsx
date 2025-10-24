@@ -7,7 +7,7 @@ import {
   getRecommendationStats,
   generateAIRecommendationsWithLocation
 } from './recommendationManager'
-import { searchPlaces, isKakaoMapsReady, waitForKakaoMapsReady } from './kakaoMapUtils'
+import { isKakaoMapsReady, waitForKakaoMapsReady } from './kakaoMapUtils'
 import './RecommendationPanel.css'
 
 /**
@@ -22,6 +22,7 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
   const [isLoading, setIsLoading] = useState(false)
   const [currentLocation, setCurrentLocation] = useState(null)
   const [nearbyRestaurants, setNearbyRestaurants] = useState([])
+  const [searchedRadius, setSearchedRadius] = useState(0) // 실제 검색된 거리 추적
   const isSearchingNearbyRef = useRef(false)
 
   // 추천 생성
@@ -86,8 +87,10 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
       }
 
       // 카카오맵 준비 대기
+      console.log('[searchNearbyRestaurants] 카카오맵 대기 중...')
       try {
         await waitForKakaoMapsReady()
+        console.log('[searchNearbyRestaurants] 카카오맵 대기 완료')
       } catch (error) {
         console.warn('⚠️ 카카오맵 API 로드 실패:', error.message)
         console.log('📌 기본 추천으로 진행합니다.')
@@ -96,7 +99,9 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
       }
 
       // 카카오맵 준비 확인
-      if (!isKakaoMapsReady()) {
+      const kakaoReady = isKakaoMapsReady()
+      console.log('[searchNearbyRestaurants] isKakaoMapsReady():', kakaoReady)
+      if (!kakaoReady) {
         console.warn('⚠️ 카카오맵 API가 아직 준비되지 않았습니다.')
         console.log('📌 기본 추천으로 진행합니다.')
         generateRecommendations()
@@ -107,33 +112,154 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
       console.log(`📍 검색 위치: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`)
 
       // Kakao Maps 객체 존재 확인
-      if (!window.kakao?.maps?.LatLng) {
-        throw new Error('Kakao Maps API가 제대로 로드되지 않았습니다.')
+      if (!window.kakao?.maps?.services?.Places) {
+        throw new Error('Kakao Maps Places 서비스가 준비되지 않았습니다.')
       }
 
-      // LatLng 객체 생성
-      const searchLocation = new window.kakao.maps.LatLng(latitude, longitude)
-      console.log(`📍 LatLng 객체 생성: ${searchLocation}`)
+      // Places 객체 생성
+      const ps = new window.kakao.maps.services.Places()
 
-      // 카카오맵 API로 현재 위치 근처의 음식점 검색
-      console.log('🔄 searchPlaces 호출 중...')
-      const results = await searchPlaces({
-        keyword: '음식점',
-        searchOptions: {
-          location: searchLocation,
-          radius: 1000, // 1km 범위
-          size: 20
+      console.log('🔄 Places.keywordSearch() 호출 중...')
+      console.log(`📍 위도: ${latitude}, 경도: ${longitude}`)
+
+      // 거리 확장 레벨: [3km, 5km, 10km, 15km, 20km, 30km]
+      const RADIUS_LEVELS = [3000, 5000, 10000, 15000, 20000, 30000];
+
+      // 다양한 음식 관련 키워드로 검색 (일반 음식점, 카페, 식당 등)
+      // 여러 키워드의 결과를 합쳐서 더 많은 결과 확보
+      const searchKeywords = ['음식점', '식당', '카페', '커피숍']
+      const allResults = {}  // 중복 제거용 객체 (ID 기반)
+
+      return new Promise((resolve, reject) => {
+        let completedSearches = 0
+        let totalSearches = searchKeywords.length
+
+        const searchCallback = (data, status) => {
+          try {
+            console.log(`[searchNearbyRestaurants] 검색 콜백 - status: ${status}, 결과: ${Array.isArray(data) ? data.length : 'null'}`)
+
+            if (status === window.kakao.maps.services.Status.OK) {
+              console.log(`✅ 검색 완료: ${data.length}개`)
+
+              // 중복 제거하면서 모든 결과 수집
+              if (data && data.length > 0) {
+                data.forEach(place => {
+                  if (!allResults[place.id]) {
+                    allResults[place.id] = place
+                  }
+                })
+              }
+
+              completedSearches++
+              console.log(`📊 검색 진행: ${completedSearches}/${totalSearches}`)
+
+              // 모든 검색이 완료되면 결과 처리
+              if (completedSearches === totalSearches) {
+                const resultsArray = Object.values(allResults)
+                console.log(`✅ 최종 수집: ${resultsArray.length}개`)
+
+                if (resultsArray.length > 0) {
+                  // 모든 데이터에 거리 계산
+                  const allWithDistance = resultsArray.map(place => {
+                    const distance = Math.hypot(
+                      parseFloat(place.x) - longitude,
+                      parseFloat(place.y) - latitude
+                    ) * 111000; // 좌표 단위를 미터로 변환 (대략값)
+                    return { ...place, distance }
+                  }).sort((a, b) => a.distance - b.distance)
+
+                  // 거리 통계 로깅
+                  const distances = allWithDistance.map(p => p.distance)
+                  const minDistance = Math.min(...distances)
+                  const maxDistance = Math.max(...distances)
+                  const avgDistance = (distances.reduce((a, b) => a + b, 0) / distances.length).toFixed(0)
+
+                  console.log(`📊 거리 통계:`)
+                  console.log(`  - 최단: ${Math.round(minDistance)}m`)
+                  console.log(`  - 최장: ${Math.round(maxDistance)}m`)
+                  console.log(`  - 평균: ${avgDistance}m`)
+                  console.log(`  - 상위 5개 음식점:`)
+                  allWithDistance.slice(0, 5).forEach((p, i) => {
+                    console.log(`    ${i+1}. ${p.place_name} - ${Math.round(p.distance)}m`)
+                  })
+
+                  // 점진적 거리 확장: 각 레벨에서 검색하여 첫 결과 반환
+                  let foundRestaurants = [];
+                  let actualRadius = 0;
+
+                  for (const radius of RADIUS_LEVELS) {
+                    const filtered = allWithDistance.filter(place => place.distance <= radius)
+                    if (filtered.length > 0) {
+                      foundRestaurants = filtered
+                      actualRadius = radius / 1000; // 미터를 km로 변환
+                      console.log(`✨ ${actualRadius}km 반경에서 ${filtered.length}개 음식점 발견!`)
+                      console.log('검색된 음식점 (거리순):', filtered.slice(0, 3).map(p => ({
+                        name: p.place_name,
+                        distance: `${Math.round(p.distance)}m (${(p.distance / 1000).toFixed(2)}km)`
+                      })))
+                      break;
+                    } else {
+                      console.log(`⚠️ ${radius / 1000}km 반경 내 음식점 없음, 다음 거리 시도...`)
+                    }
+                  }
+
+                  if (foundRestaurants.length === 0) {
+                    console.log('⚠️ 30km 반경 내에도 음식점이 없습니다.')
+                  } else {
+                    console.log(`🎯 최종 결과: ${actualRadius}km 반경에서 ${foundRestaurants.length}개 음식점 선택`)
+                  }
+
+                  setNearbyRestaurants(foundRestaurants)
+                  setSearchedRadius(actualRadius)
+                } else {
+                  // 결과가 없을 경우
+                  console.log('⚠️ 수집된 결과가 없습니다.')
+                  setNearbyRestaurants([])
+                  setSearchedRadius(0)
+                  generateRecommendations()
+                }
+              }
+            } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
+              console.log('⚠️ 검색 결과 없음')
+              completedSearches++
+
+              if (completedSearches === totalSearches) {
+                const resultsArray = Object.values(allResults)
+                console.log(`✅ 최종 수집: ${resultsArray.length}개`)
+
+                if (resultsArray.length === 0) {
+                  setNearbyRestaurants([])
+                  setSearchedRadius(0)
+                  generateRecommendations()
+                }
+              }
+            } else {
+              console.error(`❌ 검색 실패: ${status}`)
+              completedSearches++
+
+              // 마지막 검색이 실패했을 때
+              if (completedSearches === totalSearches && Object.keys(allResults).length === 0) {
+                throw new Error(`장소 검색 실패: ${status}`)
+              }
+            }
+          } catch (error) {
+            console.error('❌ 검색 콜백 처리 중 오류:', error)
+            reject(error)
+          }
         }
-      })
 
-      if (results && Array.isArray(results) && results.length > 0) {
-        console.log(`✅ 근처 음식점 검색 완료: ${results.length}개`)
-        setNearbyRestaurants(results)
-      } else {
-        console.log('⚠️ 검색 결과가 없습니다. 기본 추천으로 진행합니다.')
-        setNearbyRestaurants([])
-        generateRecommendations()
-      }
+        // ✅ Kakao Maps JS SDK의 keywordSearch() 사용
+        // 주의: searchOptions는 지원되지 않음 (HTTP 400 에러 발생)
+        // 모든 결과를 받아서 클라이언트에서 거리순으로 정렬
+        console.log(`🔍 위치 기반 검색 시작: (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`)
+        console.log(`   → 다양한 키워드로 음식점 검색 후 클라이언트에서 거리순 정렬`)
+        console.log(`   → 검색 키워드: ${searchKeywords.join(', ')}`)
+
+        // 각 키워드별로 검색 실행
+        searchKeywords.forEach((keyword) => {
+          ps.keywordSearch(keyword, searchCallback)
+        })
+      })
     } catch (error) {
       console.error('❌ 음식점 검색 오류:', error)
       console.error('에러 메시지:', error.message)
@@ -263,6 +389,12 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
           onClick={() => setActiveTab('recommendations')}
         >
           💡 추천
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'nearby' ? 'active' : ''}`}
+          onClick={() => setActiveTab('nearby')}
+        >
+          📍 근처 ({nearbyRestaurants.length})
         </button>
         <button
           className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`}
@@ -405,6 +537,41 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
                   </div>
                 )}
               </>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'nearby' && (
+          <div className="nearby-tab">
+            {nearbyRestaurants.length > 0 ? (
+              <div className="nearby-list">
+                <div className="nearby-info">
+                  📍 현재 위치 {searchedRadius}km 반경에 {nearbyRestaurants.length}개 식당을 찾았습니다
+                </div>
+                {nearbyRestaurants.map((restaurant, idx) => (
+                  <div key={idx} className="nearby-item">
+                    <div className="nearby-ranking">{idx + 1}</div>
+                    <div className="nearby-content">
+                      <h4 className="nearby-name">{restaurant.place_name}</h4>
+                      <p className="nearby-address">📍 {restaurant.address_name}</p>
+                      <p className="nearby-distance">
+                        🚶 {(restaurant.distance / 1000).toFixed(2)}km
+                      </p>
+                      {restaurant.phone && (
+                        <p className="nearby-phone">📞 {restaurant.phone}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="no-data">
+                <div className="no-data-icon">📍</div>
+                <p>현재 위치 30km 반경에 검색된 식당이 없습니다.</p>
+                <p className="no-data-hint">
+                  다른 메뉴를 시도하거나 위치를 확인해보세요!
+                </p>
+              </div>
             )}
           </div>
         )}

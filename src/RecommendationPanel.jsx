@@ -144,9 +144,23 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
       // 거리 확장 레벨: [3km, 5km, 10km, 15km, 20km, 30km]
       const RADIUS_LEVELS = [3000, 5000, 10000, 15000, 20000, 30000];
 
-      // 검색 키워드: 실제 메뉴명 + 보조 키워드
-      // 예: "우동" + "식당" + "카페" 등으로 여러 번 검색하여 결과 확보
-      const searchKeywords = [selectedMenu, '식당', '카페']
+      // 실제 음식 종류 키워드로 검색 (generic "음식점"보다 효과적)
+      // baseMenus에서 추출한 실제 음식 종류로 검색하여 정확도 높임
+      // 예: 우동, 라면, 짬뽕, 쌈밥, 국밥, 피자, 파스타 등
+      const searchKeywords = [
+        // 일식
+        '우동', '라멘', '소바',
+        // 중식
+        '짬뽕', '짜장면', '탕수육',
+        // 분식
+        '라면', '국수', '쌈밥',
+        // 양식
+        '피자', '파스타', '버거',
+        // 한식
+        '국밥', '비빔밥', '구이',
+        // 카페 (음료 및 스낵)
+        '카페', '커피숍'
+      ]
       const allResults = {}  // 중복 제거용 객체 (ID 기반)
 
       return new Promise((resolve, reject) => {

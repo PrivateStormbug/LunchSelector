@@ -144,9 +144,9 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
       // 거리 확장 레벨: [3km, 5km, 10km, 15km, 20km, 30km]
       const RADIUS_LEVELS = [3000, 5000, 10000, 15000, 20000, 30000];
 
-      // 다양한 음식 관련 키워드로 검색 (일반 음식점, 카페, 식당 등)
-      // 여러 키워드의 결과를 합쳐서 더 많은 결과 확보
-      const searchKeywords = ['음식점', '식당', '카페', '커피숍']
+      // 검색 키워드: 실제 메뉴명 + 보조 키워드
+      // 예: "우동" + "식당" + "카페" 등으로 여러 번 검색하여 결과 확보
+      const searchKeywords = [selectedMenu, '식당', '카페']
       const allResults = {}  // 중복 제거용 객체 (ID 기반)
 
       return new Promise((resolve, reject) => {

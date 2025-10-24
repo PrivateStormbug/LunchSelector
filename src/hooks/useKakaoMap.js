@@ -122,8 +122,9 @@ export function useKakaoMap({ selectedMenu, currentLocation, shouldShowMap }) {
         // 거리 확장 레벨: [1km, 2km, 3km, 5km, 10km, 15km, 20km, 30km]
         const RADIUS_LEVELS = [1000, 2000, 3000, 5000, 10000, 15000, 20000, 30000];
 
-        // 다양한 음식 관련 키워드로 검색 (메인 키워드 + 보조 키워드)
-        const searchKeywords = [searchKeyword, '식당', '카페', '커피숍']
+        // 검색 키워드: 실제 메뉴명 + 보조 키워드
+        // 예: "우동" + "식당" + "카페" 등으로 여러 번 검색하여 결과 확보
+        const searchKeywords = [searchKeyword, '식당', '카페']
         const allResults = {}  // 중복 제거용 객체 (ID 기반)
 
         let completedSearches = 0

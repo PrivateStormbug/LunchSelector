@@ -219,6 +219,7 @@ export function useKakaoMap({ selectedMenu, currentLocation, shouldShowMap }) {
     isLoadingMap,
     searchResults,
     selectedPlace,
+    setSelectedPlace,
     mapRef,
     kakaoMapRef,
     initializeMap,

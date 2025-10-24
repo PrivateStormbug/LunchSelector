@@ -74,6 +74,7 @@ function App() {
     isLoadingMap,
     searchResults,
     selectedPlace,
+    setSelectedPlace,
     mapRef,
     kakaoMapRef,
     selectPlace,

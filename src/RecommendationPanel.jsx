@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   generateAIRecommendations,
   buildUserProfile,
@@ -22,7 +22,7 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
   const [isLoading, setIsLoading] = useState(false)
   const [currentLocation, setCurrentLocation] = useState(null)
   const [nearbyRestaurants, setNearbyRestaurants] = useState([])
-  const [isSearchingNearby, setIsSearchingNearby] = useState(false)
+  const isSearchingNearbyRef = useRef(false)
 
   // 추천 생성
   useEffect(() => {
@@ -72,13 +72,13 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
    * 현재 위치 근처 음식점 검색
    */
   const searchNearbyRestaurants = async (latitude, longitude) => {
-    // 중복 요청 방지
-    if (isSearchingNearby) {
+    // 중복 요청 방지 (useRef로 동기식 체크)
+    if (isSearchingNearbyRef.current) {
       console.log('🔄 이미 검색 중입니다. 중복 요청 무시')
       return
     }
 
-    setIsSearchingNearby(true)
+    isSearchingNearbyRef.current = true
     try {
       // 입력값 검증
       if (typeof latitude !== 'number' || typeof longitude !== 'number') {
@@ -143,7 +143,7 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
       setNearbyRestaurants([])
       generateRecommendations()
     } finally {
-      setIsSearchingNearby(false)
+      isSearchingNearbyRef.current = false
     }
   }
 

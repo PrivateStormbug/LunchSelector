@@ -199,6 +199,7 @@ export const searchPlaces = (options) => {
       }
 
       // API 호출 (클라이언트에서는 appkey를 URL 파라미터로 전달)
+      params.append('appkey', apiKey)
       const url = `https://dapi.kakao.com/v2/local/search/keyword.json?${params.toString()}`
       console.log('[searchPlaces] REST API 요청 URL:', url)
       logger.debug(`카카오맵 REST API 호출: ${keyword}`)
@@ -206,8 +207,7 @@ export const searchPlaces = (options) => {
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'Accept': 'application/json',
-          'Authorization': `KakaoAK ${apiKey}`
+          'Accept': 'application/json'
         }
       })
 

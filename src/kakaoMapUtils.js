@@ -29,7 +29,28 @@ export const waitForKakaoMapsReady = () => {
         
         // Kakao Maps 로드 함수 실행
         window.kakao.maps.load(() => {
-          resolve()
+          // Places 서비스가 완전히 준비될 때까지 대기
+          let placesAttempts = 0
+          const placesMaxAttempts = 50 // 5초 대기 (100ms * 50)
+          
+          const checkPlacesReady = () => {
+            if (window.kakao?.maps?.services?.Places) {
+              const totalElapsed = performance.now() - startTime
+              logger.info(`✅ Kakao Maps Places 서비스 준비 완료 (${totalElapsed.toFixed(0)}ms)`)
+              resolve()
+            } else {
+              placesAttempts++
+              if (placesAttempts >= placesMaxAttempts) {
+                const totalElapsed = performance.now() - startTime
+                logger.warn(`⚠️ Places 서비스 초기화 지연 (${totalElapsed.toFixed(0)}ms)하지만 진행`)
+                resolve() // 타임아웃되어도 진행
+                return
+              }
+              setTimeout(checkPlacesReady, 100)
+            }
+          }
+          
+          checkPlacesReady()
         })
       } else {
         attempts++

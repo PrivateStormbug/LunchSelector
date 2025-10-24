@@ -165,6 +165,9 @@ export const searchPlaces = (options) => {
       params.append('page', options.searchOptions?.page || 1)
       params.append('size', options.searchOptions?.size || 15)
 
+      // 클라이언트 환경에서는 appkey를 URL 파라미터로 전달해야 함
+      params.append('appkey', apiKey)
+
       // 좌표 기반 검색 설정
       if (options.searchOptions?.location && options.searchOptions?.radius) {
         const locObj = options.searchOptions.location
@@ -198,7 +201,7 @@ export const searchPlaces = (options) => {
         logger.debug(`키워드 기반 검색 수행`)
       }
 
-      // API 호출
+      // API 호출 (클라이언트에서는 appkey를 URL 파라미터로 전달)
       const url = `https://dapi.kakao.com/v2/local/search/keyword.json?${params.toString()}`
       console.log('[searchPlaces] REST API 요청 URL:', url)
       logger.debug(`카카오맵 REST API 호출: ${keyword}`)
@@ -206,7 +209,6 @@ export const searchPlaces = (options) => {
       const response = await fetch(url, {
         method: 'GET',
         headers: {
-          'Authorization': `KakaoAK ${apiKey}`,
           'Accept': 'application/json'
         }
       })

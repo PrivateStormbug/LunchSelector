@@ -163,35 +163,35 @@ export const searchPlaces = (options) => {
       // searchOptions 구성 (필수 항목만 포함)
       const searchOptions = {}
 
-      // location 설정 (필수)
-      if (options.searchOptions?.location) {
+      // 기본 검색 옵션 설정
+      searchOptions.page = 1
+      searchOptions.size = Number(options.searchOptions?.size) || 15
+
+      console.log('[searchPlaces] 검색 옵션 구성 중:')
+      console.log('  - keyword:', keyword)
+      console.log('  - size:', searchOptions.size)
+
+      // location 설정은 radius와 함께만 사용하고 단독으로는 사용하지 않음
+      // (LatLng 객체 직렬화 문제 회피)
+      if (options.searchOptions?.location && options.searchOptions?.radius) {
         searchOptions.location = options.searchOptions.location
-        logger.debug(`검색 위치 설정: ${options.searchOptions.location}`)
-      }
-
-      // radius 설정 (선택)
-      if (options.searchOptions?.radius) {
         searchOptions.radius = Number(options.searchOptions.radius)
-        logger.debug(`검색 반경: ${searchOptions.radius}m`)
+        console.log('  - location: 설정됨 (반경 기반 검색)')
+        console.log('  - radius:', searchOptions.radius + 'm')
+        logger.debug(`위치 기반 검색: 반경 ${searchOptions.radius}m`)
+      } else {
+        console.log('  - location: 설정 안 함 (일반 키워드 검색)')
+        logger.debug(`일반 키워드 검색 수행`)
       }
 
-      // size 설정 (선택)
-      if (options.searchOptions?.size) {
-        searchOptions.size = Number(options.searchOptions.size)
-      }
-
-      // page 설정 (선택)
-      if (options.searchOptions?.page) {
-        searchOptions.page = Number(options.searchOptions.page)
-      }
-
-      // 최소한 location은 있어야 함
-      if (!searchOptions.location) {
-        logger.warn('location이 없습니다. 기본 검색을 수행합니다.')
+      // sort 설정 (선택 - 거리순)
+      if (options.searchOptions?.sort) {
+        searchOptions.sort = options.searchOptions.sort
+        console.log('  - sort: 거리순')
       }
 
       logger.debug(`카카오맵 검색 시작: "${keyword}"`)
-      logger.debug(`searchOptions:`, searchOptions)
+      console.log('[searchPlaces] searchOptions:', JSON.stringify(searchOptions, null, 2))
 
       // 콜백 함수 정의
       const callback = (data, status) => {

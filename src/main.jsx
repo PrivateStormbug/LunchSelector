@@ -44,15 +44,19 @@ const KAKAO_MAP_API_KEY = import.meta.env.VITE_KAKAO_MAP_API_KEY
 if (KAKAO_MAP_API_KEY) {
   const script = document.createElement('script')
   script.type = 'text/javascript'
-  script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services&autoload=false`
+  // autoload=true로 변경: SDK 자동 초기화 후 ready 콜백 실행
+  script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&libraries=services,drawing&autoload=true`
   script.async = true
   script.onerror = () => {
-    logger.error('Kakao Maps SDK 로드 실패')
+    logger.error('❌ Kakao Maps SDK 로드 실패')
+  }
+  script.onload = () => {
+    logger.info('✅ Kakao Maps SDK 로드 완료')
   }
   document.head.appendChild(script)
-  logger.debug('Kakao Maps SDK 로드 시작')
+  logger.debug(`✨ Kakao Maps SDK 로드 시작 (API Key: ${KAKAO_MAP_API_KEY.substring(0, 8)}...)`)
 } else {
-  logger.warn('Kakao Map API Key가 설정되지 않았습니다. .env 파일을 확인해주세요.')
+  logger.error('❌ VITE_KAKAO_MAP_API_KEY가 설정되지 않았습니다. .env 파일을 확인해주세요.')
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

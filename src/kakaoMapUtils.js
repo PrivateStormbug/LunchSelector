@@ -161,8 +161,6 @@ export const searchPlaces = (options) => {
 
       const ps = new window.kakao.maps.services.Places()
 
-      // Do NOT use location/radius options - causes HTTP 400 errors
-      // Use client-side distance filtering instead (like useKakaoMap.js)
       console.log('[searchPlaces] Kakao Maps Places.keywordSearch() called')
       logger.debug(`Kakao Maps SDK API call: ${keyword}`)
 
@@ -191,8 +189,8 @@ export const searchPlaces = (options) => {
         }
       }
 
-      // Search execution - NO searchOptions (use client-side filtering instead)
-      ps.keywordSearch(keyword, searchCallback)
+      // Search execution - pass searchOptions as third parameter
+      ps.keywordSearch(keyword, searchCallback, options.searchOptions)
     } catch (error) {
       console.error('❌ 카카오맵 검색 오류:', error)
       logger.error('❌ 카카오맵 검색 중 오류 발생', error)

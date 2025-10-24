@@ -119,21 +119,28 @@ export function useKakaoMap({ selectedMenu, currentLocation, shouldShowMap }) {
         logger.debug(`음식점 검색: ${searchKeyword}`)
         logger.debug(`검색 위치: ${latitude}, ${longitude}`)
 
-        // 거리 확장 레벨: [1km, 2km, 3km, 5km, 10km, 15km, 20km, 30km]
-        const RADIUS_LEVELS = [1000, 2000, 3000, 5000, 10000, 15000, 20000, 30000];
+        // 위치 기반 검색 옵션 설정
+        const searchOptions = {
+          location: new window.kakao.maps.LatLng(latitude, longitude),
+          radius: 1000,  // 1km 범위
+          size: 20
+        }
 
-        // 검색 키워드: 실제 메뉴명 + 보조 키워드
-        // 예: "우동" + "식당" + "카페" 등으로 여러 번 검색하여 결과 확보
-        const searchKeywords = [searchKeyword, '식당', '카페']
+        // 검색 키워드
+        const searchKeywords = [
+          searchKeyword,           // 메뉴명
+          searchKeyword + ' 근처', // 메뉴명 + 근처
+          '식당',                  // 식당
+          '음식점'                 // 음식점
+        ]
+
         const allResults = {}  // 중복 제거용 객체 (ID 기반)
 
         let completedSearches = 0
         let totalSearches = searchKeywords.length
 
-        // ✅ Kakao Maps JS SDK의 keywordSearch() 사용 (멀티키워드)
-        // 주의: searchOptions는 지원되지 않음 (HTTP 400 에러 발생)
-        console.log(`[useKakaoMap] keywordSearch 호출: keyword="${searchKeyword}"`)
-        console.log(`   → 다양한 키워드로 검색하여 모든 결과 수집 후 클라이언트에서 거리순 정렬`)
+        console.log(`[useKakaoMap] 위치 기반 검색 시작: keyword="${searchKeyword}"`)
+        console.log(`   → 위치: ${latitude}, ${longitude}, 반경: 1km`)
         console.log(`   → 검색 키워드: ${searchKeywords.join(', ')}`)
 
         // 검색 콜백 함수
@@ -303,9 +310,9 @@ export function useKakaoMap({ selectedMenu, currentLocation, shouldShowMap }) {
           }
         }
 
-        // 각 키워드별로 검색 실행
+        // 각 키워드별로 검색 실행 (searchOptions와 함께 전달)
         searchKeywords.forEach((keyword) => {
-          ps.keywordSearch(keyword, searchCallback)
+          ps.keywordSearch(keyword, searchCallback, searchOptions)
         })
       } catch (error) {
         logger.error('지도 초기화 오류', error)

@@ -83,21 +83,47 @@ export const searchPlaces = (options) => {
       return
     }
 
-    const placesService = new window.kakao.maps.services.Places()
+    try {
+      const placesService = new window.kakao.maps.services.Places()
 
-    placesService.keywordSearch(options.keyword, (data, status) => {
-      if (status === window.kakao.maps.services.Status.OK) {
-        logger.debug(`장소 검색 완료: ${data.length}개 결과`)
-        resolve(data)
-      } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
-        logger.warn('검색 결과 없음')
-        resolve([])
-      } else {
-        const error = new Error(`장소 검색 실패: ${status}`)
-        logger.error('장소 검색 실패', error)
-        reject(error)
+      // searchOptions 기본값 설정
+      const searchOptions = {
+        location: options.searchOptions?.location,
+        radius: options.searchOptions?.radius || 1000,
+        sort: options.searchOptions?.sort || window.kakao.maps.services.SortBy.DISTANCE,
+        size: options.searchOptions?.size || 20,
+        page: options.searchOptions?.page || 1
       }
-    }, options.searchOptions)
+
+      // 콜백 함수 정의
+      const callback = (data, status) => {
+        if (status === window.kakao.maps.services.Status.OK) {
+          logger.debug(`장소 검색 완료: ${data.length}개 결과`)
+          resolve(data)
+        } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
+          logger.warn('검색 결과 없음')
+          resolve([])
+        } else if (status === window.kakao.maps.services.Status.ERROR_RESPONSE) {
+          const error = new Error('카카오맵 API 서버 오류 (ERROR_RESPONSE)')
+          logger.error('장소 검색 실패 - API 오류', error)
+          reject(error)
+        } else if (status === window.kakao.maps.services.Status.INVALID_PARAMS) {
+          const error = new Error('카카오맵 API 매개변수 오류 (INVALID_PARAMS)')
+          logger.error('장소 검색 실패 - 잘못된 매개변수', error)
+          reject(error)
+        } else {
+          const error = new Error(`장소 검색 실패: ${status}`)
+          logger.error('장소 검색 실패', error)
+          reject(error)
+        }
+      }
+
+      // 검색 실행
+      placesService.keywordSearch(options.keyword, callback, searchOptions)
+    } catch (error) {
+      logger.error('카카오맵 검색 중 예외 발생', error)
+      reject(new Error(`카카오맵 검색 오류: ${error.message}`))
+    }
   })
 }
 

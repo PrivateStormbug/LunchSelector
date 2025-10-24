@@ -118,72 +118,90 @@ export function useKakaoMap({ selectedMenu, currentLocation, shouldShowMap }) {
         // 키워드로 장소 검색
         const searchOptions = {
           location: new window.kakao.maps.LatLng(latitude, longitude),
-          radius: APP_CONFIG.performance.searchRadius,
+          radius: APP_CONFIG.performance.searchRadius || 1000,
           sort: window.kakao.maps.services.SortBy.DISTANCE,
-          category_group_code: APP_CONFIG.kakao.categoryCode
+          size: 20
         }
 
         const searchKeyword = getBaseMenu(selectedMenu)
         logger.debug(`음식점 검색: ${searchKeyword}`)
+        logger.debug(`검색 옵션: 반경 ${searchOptions.radius}m, 위치: ${latitude}, ${longitude}`)
 
-        ps.keywordSearch(searchKeyword, (data, status) => {
-          if (status === window.kakao.maps.services.Status.OK) {
-            setSearchResults(data)
-            logger.info(`검색 결과: ${data.length}개 식당 발견`)
+        // 검색 콜백 함수
+        const searchCallback = (data, status) => {
+          try {
+            if (status === window.kakao.maps.services.Status.OK) {
+              setSearchResults(data)
+              logger.info(`검색 결과: ${data.length}개 식당 발견`)
 
-            // 기존 마커 제거
-            cleanupMarkers(markersRef.current.map((_, idx) => `marker_${idx}`))
-            markersRef.current = []
+              // 기존 마커 제거
+              cleanupMarkers(markersRef.current.map((_, idx) => `marker_${idx}`))
+              markersRef.current = []
 
-            // 검색 결과에 마커 표시
-            const markerPool = getMarkerPool()
-            if (markerPool) {
-              const onMarkerClickHandler = (place) => {
-                selectPlace(place)
-              }
-              const newMarkers = createMarkersFromPlaces(
-                data,
-                map,
-                onMarkerClickHandler,
-                markerPool
-              )
-              markersRef.current = newMarkers
-              
-              // 첫 번째 검색 결과로 중심 이동
-              if (data.length > 0) {
-                map.setCenter(new window.kakao.maps.LatLng(data[0].y, data[0].x))
-                setSelectedPlace(data[0])
-              }
-            } else {
-              logger.warn('마커 풀 초기화 실패, 기본 마커 생성 선택')
-              // Fallback: 기본 마커 생성
-              const newMarkers = data.map((place) => {
-                const placePosition = new window.kakao.maps.LatLng(place.y, place.x)
-                const placeMarker = new window.kakao.maps.Marker({
-                  position: placePosition,
-                  map: map
-                })
-                window.kakao.maps.event.addListener(placeMarker, 'click', () => {
+              // 검색 결과에 마커 표시
+              const markerPool = getMarkerPool()
+              if (markerPool) {
+                const onMarkerClickHandler = (place) => {
                   selectPlace(place)
+                }
+                const newMarkers = createMarkersFromPlaces(
+                  data,
+                  map,
+                  onMarkerClickHandler,
+                  markerPool
+                )
+                markersRef.current = newMarkers
+
+                // 첫 번째 검색 결과로 중심 이동
+                if (data.length > 0) {
+                  map.setCenter(new window.kakao.maps.LatLng(data[0].y, data[0].x))
+                  setSelectedPlace(data[0])
+                }
+              } else {
+                logger.warn('마커 풀 초기화 실패, 기본 마커 생성 선택')
+                // Fallback: 기본 마커 생성
+                const newMarkers = data.map((place) => {
+                  const placePosition = new window.kakao.maps.LatLng(place.y, place.x)
+                  const placeMarker = new window.kakao.maps.Marker({
+                    position: placePosition,
+                    map: map
+                  })
+                  window.kakao.maps.event.addListener(placeMarker, 'click', () => {
+                    selectPlace(place)
+                  })
+                  return placeMarker
                 })
-                return placeMarker
-              })
-              markersRef.current = newMarkers
+                markersRef.current = newMarkers
+              }
+              setIsLoadingMap(false)
+              perfMonitor.end('mapInitialization')
+            } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
+              setSearchResults([])
+              logger.warn('검색 결과 없음')
+              setIsLoadingMap(false)
+              perfMonitor.end('mapInitialization')
+            } else if (status === window.kakao.maps.services.Status.ERROR_RESPONSE) {
+              logger.error('카카오맵 API 서버 오류 (ERROR_RESPONSE)')
+              setIsLoadingMap(false)
+              perfMonitor.end('mapInitialization')
+            } else if (status === window.kakao.maps.services.Status.INVALID_PARAMS) {
+              logger.error('카카오맵 API 매개변수 오류 (INVALID_PARAMS)')
+              setIsLoadingMap(false)
+              perfMonitor.end('mapInitialization')
+            } else {
+              logger.error(`장소 검색 실패: ${status}`)
+              setIsLoadingMap(false)
+              perfMonitor.end('mapInitialization')
             }
-            setIsLoadingMap(false)
-            perfMonitor.end('mapInitialization')
-          } else if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
-            setSearchResults([])
-            logger.warn('검색 결과 없음')
-            alert('검색 결과가 없습니다. 다른 메뉴를 추천받아보세요!')
-            setIsLoadingMap(false)
-            perfMonitor.end('mapInitialization')
-          } else {
-            logger.error(`장소 검색 실패: ${status}`)
+          } catch (callbackError) {
+            logger.error('검색 콜백 처리 중 오류', callbackError)
             setIsLoadingMap(false)
             perfMonitor.end('mapInitialization')
           }
-        }, searchOptions)
+        }
+
+        // 검색 실행
+        ps.keywordSearch(searchKeyword, searchCallback, searchOptions)
       } catch (error) {
         logger.error('지도 초기화 오류', error)
         setIsLoadingMap(false)

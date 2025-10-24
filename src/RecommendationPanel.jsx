@@ -4,8 +4,10 @@ import {
   buildUserProfile,
   recordRecommendations,
   recordRecommendationFeedback,
-  getRecommendationStats
+  getRecommendationStats,
+  generateAIRecommendationsWithLocation
 } from './recommendationManager'
+import { searchPlaces, isKakaoMapsReady } from './kakaoMapUtils'
 import './RecommendationPanel.css'
 
 /**
@@ -18,21 +20,134 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
   const [feedbackRatings, setFeedbackRatings] = useState({})
   const [showFeedback, setShowFeedback] = useState({})
   const [isLoading, setIsLoading] = useState(false)
+  const [currentLocation, setCurrentLocation] = useState(null)
+  const [nearbyRestaurants, setNearbyRestaurants] = useState([])
 
   // 추천 생성
   useEffect(() => {
     if (isVisible) {
-      generateRecommendations()
+      getCurrentLocation()
       loadStats()
     }
   }, [isVisible])
 
+  // nearbyRestaurants가 업데이트되면 추천 생성
+  useEffect(() => {
+    if (currentLocation && nearbyRestaurants.length > 0) {
+      generateRecommendationsWithLocation(currentLocation.latitude, currentLocation.longitude)
+    }
+  }, [nearbyRestaurants])
+
   /**
-   * AI 추천 생성
+   * 현재 위치 정보 가져오기
+   */
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords
+          console.log('📍 현재 위치 획득 성공:', { latitude, longitude })
+          setCurrentLocation({ latitude, longitude })
+
+          // 현재 위치에서 음식점 검색
+          await searchNearbyRestaurants(latitude, longitude)
+        },
+        (error) => {
+          console.warn('⚠️ 위치 정보를 가져올 수 없습니다:', error.message)
+          console.log('📌 기본 추천으로 진행합니다.')
+          // 위치 정보 없이 기본 추천 실행
+          generateRecommendations()
+        }
+      )
+    } else {
+      console.warn('⚠️ Geolocation API를 지원하지 않습니다')
+      console.log('📌 기본 추천으로 진행합니다.')
+      // 위치 정보 없이 기본 추천 실행
+      generateRecommendations()
+    }
+  }
+
+  /**
+   * 현재 위치 근처 음식점 검색
+   */
+  const searchNearbyRestaurants = async (latitude, longitude) => {
+    // 카카오맵 준비 확인 및 대기
+    try {
+      // 카카오맵이 로드되지 않으면 기본 추천 실행
+      if (!isKakaoMapsReady()) {
+        console.warn('⚠️ 카카오맵 API가 준비되지 않았습니다.')
+        console.log('📌 기본 추천으로 진행합니다.')
+        generateRecommendations()
+        return
+      }
+
+      console.log('🔍 카카오맵에서 근처 음식점 검색 중...')
+      console.log(`📍 검색 위치: ${latitude}, ${longitude}`)
+
+      // Kakao Maps LatLng 객체 생성 확인
+      if (!window.kakao || !window.kakao.maps || !window.kakao.maps.LatLng) {
+        throw new Error('Kakao Maps LatLng 객체를 생성할 수 없습니다.')
+      }
+
+      // 카카오맵 API로 현재 위치 근처의 음식점 검색
+      const results = await searchPlaces({
+        keyword: '음식점',
+        searchOptions: {
+          location: new window.kakao.maps.LatLng(latitude, longitude),
+          radius: 1000, // 1km 범위
+          size: 20,
+          sort: window.kakao.maps.services.SortBy.DISTANCE // 거리순 정렬
+        }
+      })
+
+      if (results && results.length > 0) {
+        console.log(`✅ 근처 음식점 검색 완료: ${results.length}개`)
+        setNearbyRestaurants(results)
+      } else {
+        console.log('⚠️ 검색 결과가 없습니다. 기본 추천으로 진행합니다.')
+        generateRecommendations()
+      }
+    } catch (error) {
+      console.error('❌ 음식점 검색 실패:', error.message)
+      console.log('📌 기본 추천으로 폴백합니다.')
+      // 음식점 검색 실패 시 기본 추천 실행
+      generateRecommendations()
+    }
+  }
+
+  /**
+   * AI 추천 생성 (위치 기반)
+   */
+  const generateRecommendationsWithLocation = (latitude, longitude) => {
+    setIsLoading(true)
+    console.log('🤖 위치 기반 AI 추천 생성 중...')
+
+    // 사용자 프로필 구성
+    const profile = buildUserProfile()
+
+    // 위치 기반 AI 추천 생성
+    const aiRecommendations = generateAIRecommendationsWithLocation(
+      profile,
+      nearbyRestaurants,
+      { latitude, longitude },
+      5
+    )
+
+    // 추천 이력 저장
+    recordRecommendations(aiRecommendations)
+
+    console.log(`✨ 추천 완료: ${aiRecommendations.length}개 메뉴`)
+    setRecommendations(aiRecommendations)
+    setIsLoading(false)
+  }
+
+  /**
+   * AI 추천 생성 (기본)
    */
   const generateRecommendations = () => {
     setIsLoading(true)
-    
+    console.log('🤖 기본 AI 추천 생성 중...')
+
     // 사용자 프로필 구성
     const profile = buildUserProfile()
 
@@ -42,6 +157,7 @@ function RecommendationPanel({ onSelectMenu, onShowDetail, isVisible, onClose })
     // 추천 이력 저장
     recordRecommendations(aiRecommendations)
 
+    console.log(`✨ 추천 완료: ${aiRecommendations.length}개 메뉴`)
     setRecommendations(aiRecommendations)
     setIsLoading(false)
   }

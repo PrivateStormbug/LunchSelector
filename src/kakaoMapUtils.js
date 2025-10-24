@@ -206,11 +206,7 @@ export const searchPlaces = (options) => {
 
       const response = await fetch(url, {
         method: 'GET',
-        mode: 'cors',
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': `KakaoAK ${apiKey}`
-        }
+        mode: 'cors'
       })
 
       console.log(`[searchPlaces] REST API 응답 상태: ${response.status}`)

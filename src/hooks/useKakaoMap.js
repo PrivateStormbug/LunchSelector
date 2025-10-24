@@ -119,8 +119,8 @@ export function useKakaoMap({ selectedMenu, currentLocation, shouldShowMap }) {
         const searchOptions = {
           location: new window.kakao.maps.LatLng(latitude, longitude),
           radius: APP_CONFIG.performance.searchRadius || 1000,
-          sort: window.kakao.maps.services.SortBy.DISTANCE,
           size: 20
+          // sort 파라미터 제거 - API 호환성 문제로 인해 정렬은 기본값 사용
         }
 
         const searchKeyword = getBaseMenu(selectedMenu)

@@ -198,7 +198,7 @@ export const searchPlaces = (options) => {
         logger.debug(`키워드 기반 검색 수행`)
       }
 
-      // API 호출 (클라이언트에서는 appkey를 URL 파라미터로 전달)
+      // API 호출 (appkey 파라미터와 Authorization 헤더 함께 사용)
       params.append('appkey', apiKey)
       const url = `https://dapi.kakao.com/v2/local/search/keyword.json?${params.toString()}`
       console.log('[searchPlaces] REST API 요청 URL:', url)
@@ -209,7 +209,7 @@ export const searchPlaces = (options) => {
         mode: 'cors',
         headers: {
           'Accept': 'application/json',
-          'Authorization': apiKey
+          'Authorization': `KakaoAK ${apiKey}`
         }
       })
 
